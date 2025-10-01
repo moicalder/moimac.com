@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isUsernameAvailable } from '@/lib/db'
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic'
+
 /**
  * Check if a username is available
  * GET /api/username/check?username=desired_name&userId=optional_current_user_id

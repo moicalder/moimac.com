@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic'
+
 /**
  * Add wallet_address column to existing users table
  * Run this once if you already initialized the database before adding wallet support

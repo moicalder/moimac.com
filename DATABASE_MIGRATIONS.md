@@ -25,6 +25,9 @@ Create a new file: `/app/api/migrate-[name]/route.ts`
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 
+// Force dynamic rendering for API routes
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     // Add your new column
@@ -100,6 +103,9 @@ export async function updateUserProfile(
 ```typescript
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {

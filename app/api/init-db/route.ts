@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { initializeDatabase } from '@/lib/db'
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic'
+
 /**
  * Initialize database tables
  * Call this once after setting up Vercel Postgres
