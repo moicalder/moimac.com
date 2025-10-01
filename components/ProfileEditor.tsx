@@ -154,7 +154,7 @@ export default function ProfileEditor({ profile, onProfileUpdate }: ProfileEdito
           <div className="flex-1 min-w-0">
             {profile?.username ? (
               <>
-                <div className="text-lg font-semibold text-gray-900">@{profile.username}</div>
+                <div className="text-lg font-semibold text-gray-900">{profile.username}</div>
                 <div className="text-sm text-gray-500 truncate">{user?.email?.address}</div>
               </>
             ) : (

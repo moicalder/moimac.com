@@ -92,7 +92,7 @@ export default function UserDirectory() {
             {/* Info */}
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-gray-900 group-hover:text-primary-700 transition-colors">
-                @{user.username}
+                {user.username}
               </div>
               <div className="text-xs text-gray-500 flex items-center gap-2">
                 <span>🎮 {user.total_games_played}</span>

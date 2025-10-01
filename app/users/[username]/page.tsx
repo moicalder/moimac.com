@@ -106,7 +106,7 @@ export default function UserProfilePage() {
             <div className="text-6xl mb-4">🔍</div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">User Not Found</h1>
             <p className="text-gray-600 mb-6">
-              The user @{username} doesn't exist or hasn't set up their profile yet.
+              The user "{username}" doesn't exist or hasn't set up their profile yet.
             </p>
             <button
               onClick={() => router.push('/')}
@@ -156,7 +156,7 @@ export default function UserProfilePage() {
             {/* Info */}
             <div className="flex-1 text-center sm:text-left">
               <h1 className="text-3xl font-bold text-gray-900 mb-1">
-                @{user.username}
+                {user.username}
               </h1>
               {isOwnProfile && (
                 <div className="inline-block px-3 py-1 bg-primary-100 text-primary-700 
