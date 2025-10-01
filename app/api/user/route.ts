@@ -105,6 +105,8 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json()
     const { username, avatar_url, wallet_address } = body
 
+    console.log('PATCH /api/user - userId:', userId, 'updates:', { username, avatar_url, wallet_address })
+
     // If updating username, check if it's available
     if (username) {
       const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/
@@ -131,11 +133,14 @@ export async function PATCH(request: NextRequest) {
     })
     
     if (!profile) {
+      console.error('Failed to update profile for userId:', userId)
       return NextResponse.json(
         { error: 'Failed to update profile' },
         { status: 500 }
       )
     }
+
+    console.log('Profile updated successfully:', { userId, username: profile.username, avatar_url: profile.avatar_url })
 
     return NextResponse.json({ profile }, {
       headers: {
