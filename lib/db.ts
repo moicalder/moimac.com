@@ -156,11 +156,21 @@ export async function getUserById(userId: string): Promise<UserProfile | null> {
  */
 export async function isUsernameAvailable(username: string, excludeUserId?: string): Promise<boolean> {
   try {
-    const { rows } = await sql`
-      SELECT id FROM users 
-      WHERE LOWER(username) = LOWER(${username})
-      ${excludeUserId ? sql`AND id != ${excludeUserId}` : sql``};
-    `
+    let rows
+    if (excludeUserId) {
+      const result = await sql`
+        SELECT id FROM users 
+        WHERE LOWER(username) = LOWER(${username})
+        AND id != ${excludeUserId};
+      `
+      rows = result.rows
+    } else {
+      const result = await sql`
+        SELECT id FROM users 
+        WHERE LOWER(username) = LOWER(${username});
+      `
+      rows = result.rows
+    }
     return rows.length === 0
   } catch (error) {
     console.error('Error checking username availability:', error)
