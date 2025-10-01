@@ -44,12 +44,13 @@ npx vercel
 ```
 
 Then in Vercel dashboard:
-1. Go to your project → **Storage** → **Create Database** → **Postgres**
-2. Go to **Settings** → **Environment Variables**
-3. Add both Privy variables:
+1. Go to your project → **Storage** → **Create Database** → **Postgres** (Neon)
+2. Database variables are auto-added! ✅
+3. Go to **Settings** → **Environment Variables**
+4. Add both Privy variables:
    - `NEXT_PUBLIC_PRIVY_APP_ID` = your App ID
    - `PRIVY_APP_SECRET` = your App Secret
-4. Redeploy
+5. Redeploy
 
 ## 4. Initialize Database (30 sec)
 

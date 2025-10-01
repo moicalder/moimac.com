@@ -47,7 +47,9 @@ PRIVY_APP_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxx
 - `PRIVY_APP_SECRET` - **NEVER expose** (server-side only)
 - Never commit `.env.local` to git (it's already in .gitignore)
 
-## Step 3: Set Up Vercel Postgres Database
+## Step 3: Set Up Postgres Database (Neon or Vercel Postgres)
+
+**Good News:** The app works with both Neon Postgres and Vercel Postgres! When you create a database in Vercel, it uses Neon behind the scenes.
 
 You have two options:
 
@@ -73,9 +75,11 @@ git push -u origin main
    - In your Vercel project dashboard
    - Click **Storage** tab
    - Click **Create Database**
-   - Select **Postgres**
+   - Select **Postgres** (powered by Neon)
    - Click **Create**
    - Environment variables are automatically added!
+   
+   **Note:** Vercel uses Neon Postgres. You'll see variables like `POSTGRES_URL`, `DATABASE_URL`, etc. The app uses `POSTGRES_URL` by default.
 
 4. **Add Privy App ID to Vercel:**
    - Go to **Settings** → **Environment Variables**
@@ -96,7 +100,9 @@ git push -u origin main
 
 2. **Get Database Credentials:**
    - After creating database, go to **.env.local** tab
-   - Copy all the `POSTGRES_*` variables
+   - You'll see many variables (POSTGRES_URL, DATABASE_URL, etc.)
+   - Copy at minimum: `POSTGRES_URL` and `POSTGRES_URL_NON_POOLING`
+   - Optionally copy all `POSTGRES_*` variables
    - Paste into your local `.env.local` file
 
 3. **Run Development Server:**
