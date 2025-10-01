@@ -3,6 +3,7 @@
 import { usePrivy } from '@privy-io/react-auth'
 import { useEffect, useState } from 'react'
 import ProfileEditor from '@/components/ProfileEditor'
+import UserDirectory from '@/components/UserDirectory'
 
 interface UserProfile {
   username: string | null
@@ -209,16 +210,8 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Placeholder for Global Leaderboard */}
-        <div className="card mt-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">🏆 Global Leaderboard</h2>
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">🎯</div>
-            <p className="text-gray-500 text-lg">
-              Play games to start competing on the leaderboard!
-            </p>
-          </div>
-        </div>
+        {/* User Directory */}
+        <UserDirectory />
       </div>
     </main>
   )
