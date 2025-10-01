@@ -27,7 +27,7 @@ export default function Home() {
     try {
       setLoading(true)
       // Get user email from Privy
-      const email = user.email?.address || user.google?.email || user.twitter?.email || 'user@example.com'
+      const email = user.email?.address || user.google?.email || `user-${user.id}@example.com`
       
       // Create or get user profile
       const response = await fetch('/api/user', {
