@@ -29,6 +29,9 @@ export default function Home() {
       // Get user email from Privy
       const email = user.email?.address || user.google?.email || `user-${user.id}@example.com`
       
+      // Get wallet address if available (Privy auto-creates embedded wallet)
+      const walletAddress = user.wallet?.address || null
+      
       // Create or get user profile
       const response = await fetch('/api/user', {
         method: 'POST',
@@ -38,6 +41,7 @@ export default function Home() {
         body: JSON.stringify({
           userId: user.id,
           email: email,
+          walletAddress: walletAddress,
         }),
       })
 

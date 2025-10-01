@@ -14,7 +14,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           logo: undefined,
         },
         embeddedWallets: {
-          createOnLogin: 'off',
+          createOnLogin: 'users-without-wallets', // Auto-create wallet for new users only
         },
       }}
     >

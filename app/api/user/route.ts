@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { userId, email } = body
+    const { userId, email, walletAddress } = body
 
     if (!userId || !email) {
       return NextResponse.json(
@@ -52,13 +52,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const profile = await getOrCreateUser(userId, email)
+    let profile = await getOrCreateUser(userId, email)
     
     if (!profile) {
       return NextResponse.json(
         { error: 'Failed to create user' },
         { status: 500 }
       )
+    }
+
+    // Update wallet address if provided and different from stored
+    if (walletAddress && profile.wallet_address !== walletAddress) {
+      profile = await updateUserProfile(userId, { wallet_address: walletAddress }) || profile
     }
 
     return NextResponse.json({ profile })

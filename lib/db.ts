@@ -5,6 +5,7 @@ export interface UserProfile {
   email: string
   username: string | null
   avatar_url: string | null
+  wallet_address: string | null
   created_at: Date
   updated_at: Date
   total_games_played: number
@@ -24,6 +25,7 @@ export async function initializeDatabase() {
         email VARCHAR(255) UNIQUE NOT NULL,
         username VARCHAR(100),
         avatar_url TEXT,
+        wallet_address VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         total_games_played INTEGER DEFAULT 0,
@@ -95,7 +97,7 @@ export async function getOrCreateUser(userId: string, email: string): Promise<Us
  */
 export async function updateUserProfile(
   userId: string,
-  updates: { username?: string; avatar_url?: string }
+  updates: { username?: string; avatar_url?: string; wallet_address?: string }
 ): Promise<UserProfile | null> {
   try {
     const setClauses: string[] = []
@@ -109,6 +111,11 @@ export async function updateUserProfile(
     if (updates.avatar_url !== undefined) {
       setClauses.push(`avatar_url = $${values.length + 1}`)
       values.push(updates.avatar_url)
+    }
+
+    if (updates.wallet_address !== undefined) {
+      setClauses.push(`wallet_address = $${values.length + 1}`)
+      values.push(updates.wallet_address)
     }
 
     if (setClauses.length === 0) {
