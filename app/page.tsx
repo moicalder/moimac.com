@@ -57,27 +57,35 @@ export default function Home() {
   }
 
   // Games data - placeholder for now
-  const games = [
+  type GameStatus = 'available' | 'coming-soon'
+  
+  const games: Array<{
+    id: string
+    name: string
+    description: string
+    icon: string
+    status: GameStatus
+  }> = [
     {
       id: 'mathmode',
       name: 'MathMode',
       description: 'Practice math with addition, subtraction, multiplication, and division',
       icon: '🔢',
-      status: 'coming-soon' as const,
+      status: 'coming-soon',
     },
     {
       id: 'snake',
       name: 'Snake',
       description: 'Classic snake game with modern twist',
       icon: '🐍',
-      status: 'coming-soon' as const,
+      status: 'coming-soon',
     },
     {
       id: 'runner',
       name: 'Pixel Runner',
       description: 'Pixel-perfect retro platformer',
       icon: '🎮',
-      status: 'coming-soon' as const,
+      status: 'coming-soon',
     },
   ]
 
