@@ -12,11 +12,16 @@ interface PublicUser {
   created_at: string
 }
 
+interface CurrentUserProfile {
+  username: string | null
+}
+
 export default function UserProfilePage() {
   const router = useRouter()
   const params = useParams()
   const { user: currentUser, authenticated } = usePrivy()
   const [user, setUser] = useState<PublicUser | null>(null)
+  const [currentUserProfile, setCurrentUserProfile] = useState<CurrentUserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
 
@@ -24,7 +29,10 @@ export default function UserProfilePage() {
 
   useEffect(() => {
     fetchUserProfile()
-  }, [username])
+    if (authenticated && currentUser?.id) {
+      fetchCurrentUserProfile()
+    }
+  }, [username, authenticated, currentUser?.id])
 
   const fetchUserProfile = async () => {
     try {
@@ -42,8 +50,34 @@ export default function UserProfilePage() {
     }
   }
 
+  const fetchCurrentUserProfile = async () => {
+    if (!currentUser?.id) return
+    
+    try {
+      const response = await fetch('/api/user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          email: currentUser.email?.address || `user-${currentUser.id}@example.com`,
+        }),
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setCurrentUserProfile(data.profile)
+      }
+    } catch (error) {
+      console.error('Error fetching current user profile:', error)
+    }
+  }
+
   // Check if this is the current user's profile
-  const isOwnProfile = authenticated && currentUser?.email?.address && user?.username
+  const isOwnProfile = authenticated && 
+                       currentUserProfile?.username && 
+                       user?.username &&
+                       currentUserProfile.username.toLowerCase() === user.username.toLowerCase()
 
   if (loading) {
     return (
