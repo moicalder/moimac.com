@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOrCreateUser, getUserById, updateUserProfile } from '@/lib/db'
+import { getOrCreateUser, getUserById, updateUserProfile, isUsernameAvailable } from '@/lib/db'
 
 // Helper to get user ID from Privy token
 // In production, you'd verify the JWT token here
@@ -88,11 +88,31 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { username, avatar_url } = body
+    const { username, avatar_url, wallet_address } = body
+
+    // If updating username, check if it's available
+    if (username) {
+      const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/
+      if (!usernameRegex.test(username)) {
+        return NextResponse.json(
+          { error: 'Username must be 3-20 characters and contain only letters, numbers, underscores, or hyphens' },
+          { status: 400 }
+        )
+      }
+
+      const available = await isUsernameAvailable(username, userId)
+      if (!available) {
+        return NextResponse.json(
+          { error: 'Username is already taken' },
+          { status: 409 }
+        )
+      }
+    }
 
     const profile = await updateUserProfile(userId, {
       username,
       avatar_url,
+      wallet_address,
     })
     
     if (!profile) {

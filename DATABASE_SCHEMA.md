@@ -12,16 +12,19 @@ Stores user profiles and aggregate statistics.
 |--------|------|-------------|
 | `id` | VARCHAR(255) | Primary key, user's Privy ID |
 | `email` | VARCHAR(255) | User's email (unique) |
-| `username` | VARCHAR(100) | Display name (defaults to email prefix) |
+| `username` | VARCHAR(100) | Display name (unique, case-insensitive) |
 | `avatar_url` | TEXT | URL to profile picture |
+| `wallet_address` | VARCHAR(255) | User's crypto wallet address |
 | `created_at` | TIMESTAMP | When account was created |
 | `updated_at` | TIMESTAMP | Last profile update |
 | `total_games_played` | INTEGER | Total games across all games |
 | `total_score` | INTEGER | Cumulative score from all games |
 
-**Indexes:**
+**Indexes & Constraints:**
 - Primary key on `id`
 - Unique constraint on `email`
+- Unique constraint on `username` (case-insensitive)
+- Defaults to email prefix for username on creation
 
 ### 2. `game_scores`
 

@@ -23,7 +23,7 @@ export async function initializeDatabase() {
       CREATE TABLE IF NOT EXISTS users (
         id VARCHAR(255) PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
-        username VARCHAR(100),
+        username VARCHAR(100) UNIQUE,
         avatar_url TEXT,
         wallet_address VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -147,6 +147,38 @@ export async function getUserById(userId: string): Promise<UserProfile | null> {
     return rows.length > 0 ? (rows[0] as UserProfile) : null
   } catch (error) {
     console.error('Error getting user:', error)
+    return null
+  }
+}
+
+/**
+ * Check if username is available
+ */
+export async function isUsernameAvailable(username: string, excludeUserId?: string): Promise<boolean> {
+  try {
+    const { rows } = await sql`
+      SELECT id FROM users 
+      WHERE LOWER(username) = LOWER(${username})
+      ${excludeUserId ? sql`AND id != ${excludeUserId}` : sql``};
+    `
+    return rows.length === 0
+  } catch (error) {
+    console.error('Error checking username availability:', error)
+    return false
+  }
+}
+
+/**
+ * Get user by username
+ */
+export async function getUserByUsername(username: string): Promise<UserProfile | null> {
+  try {
+    const { rows } = await sql`
+      SELECT * FROM users WHERE LOWER(username) = LOWER(${username});
+    `
+    return rows.length > 0 ? (rows[0] as UserProfile) : null
+  } catch (error) {
+    console.error('Error getting user by username:', error)
     return null
   }
 }
