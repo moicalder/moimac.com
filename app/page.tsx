@@ -2,9 +2,11 @@
 
 import { usePrivy } from '@privy-io/react-auth'
 import { useEffect, useState } from 'react'
+import ProfileEditor from '@/components/ProfileEditor'
 
 interface UserProfile {
   username: string | null
+  avatar_url: string | null
   total_games_played: number
   total_score: number
 }
@@ -137,25 +139,29 @@ export default function Home() {
   return (
     <main className="min-h-screen p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="card mb-8">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-1">
-                Welcome back{profile?.username ? `, ${profile.username}` : ''}! 👋
-              </h1>
-              <p className="text-gray-600">
-                {user?.email?.address || 'Player'}
-              </p>
-            </div>
-            <button onClick={logout} className="btn-secondary">
-              Sign Out
-            </button>
-          </div>
+        {/* Header with Sign Out */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">
+            🎮 MoiMac Games
+          </h1>
+          <button onClick={logout} className="btn-secondary">
+            Sign Out
+          </button>
+        </div>
 
-          {/* Stats */}
-          {profile && (
-            <div className="mt-6 grid grid-cols-2 gap-4">
+        {/* Profile Section */}
+        <div className="mb-6">
+          <ProfileEditor 
+            profile={profile} 
+            onProfileUpdate={initializeUser}
+          />
+        </div>
+
+        {/* Stats */}
+        {profile && (
+          <div className="card mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Your Stats</h2>
+            <div className="grid grid-cols-2 gap-4">
               <div className="bg-primary-50 p-4 rounded-lg">
                 <div className="text-sm text-primary-600 font-medium">Games Played</div>
                 <div className="text-2xl font-bold text-primary-700">
@@ -169,8 +175,8 @@ export default function Home() {
                 </div>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Games Grid */}
         <h2 className="text-2xl font-bold text-gray-900 mb-6">🎮 Choose a Game</h2>

@@ -23,8 +23,10 @@ Stores user profiles and aggregate statistics.
 **Indexes & Constraints:**
 - Primary key on `id`
 - Unique constraint on `email`
-- Unique constraint on `username` (case-insensitive)
+- Unique constraint on `username` (case-insensitive via LOWER() comparison)
 - Defaults to email prefix for username on creation
+
+**Note:** Username uniqueness is case-insensitive - "JohnDoe", "johndoe", and "JOHNDOE" are treated as the same username to prevent duplicates.
 
 ### 2. `game_scores`
 
