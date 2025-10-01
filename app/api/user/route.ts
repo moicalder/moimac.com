@@ -33,7 +33,13 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ profile })
+    return NextResponse.json({ profile }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
+    })
   } catch (error) {
     console.error('Error in GET /api/user:', error)
     return NextResponse.json(
@@ -69,7 +75,13 @@ export async function POST(request: NextRequest) {
       profile = await updateUserProfile(userId, { wallet_address: walletAddress }) || profile
     }
 
-    return NextResponse.json({ profile })
+    return NextResponse.json({ profile }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
+    })
   } catch (error) {
     console.error('Error in POST /api/user:', error)
     return NextResponse.json(
@@ -125,7 +137,13 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ profile })
+    return NextResponse.json({ profile }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
+    })
   } catch (error) {
     console.error('Error in PATCH /api/user:', error)
     return NextResponse.json(

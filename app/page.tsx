@@ -46,6 +46,7 @@ export default function Home() {
           email: email,
           walletAddress: walletAddress,
         }),
+        cache: 'no-store',
       })
 
       if (response.ok) {

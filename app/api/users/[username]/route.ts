@@ -33,7 +33,13 @@ export async function GET(
       )
     }
 
-    return NextResponse.json({ user: rows[0] })
+    return NextResponse.json({ user: rows[0] }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
+    })
   } catch (error) {
     console.error('Error fetching user:', error)
     return NextResponse.json(

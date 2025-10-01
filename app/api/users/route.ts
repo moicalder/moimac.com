@@ -23,7 +23,13 @@ export async function GET() {
       LIMIT 100;
     `
 
-    return NextResponse.json({ users: rows })
+    return NextResponse.json({ users: rows }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
+    })
   } catch (error) {
     console.error('Error fetching users:', error)
     return NextResponse.json(

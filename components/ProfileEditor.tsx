@@ -61,7 +61,10 @@ export default function ProfileEditor({ profile, onProfileUpdate }: ProfileEdito
 
     try {
       const response = await fetch(
-        `/api/username/check?username=${encodeURIComponent(value)}&userId=${user?.id}`
+        `/api/username/check?username=${encodeURIComponent(value)}&userId=${user?.id}`,
+        {
+          cache: 'no-store',
+        }
       )
       const data = await response.json()
 
@@ -107,6 +110,7 @@ export default function ProfileEditor({ profile, onProfileUpdate }: ProfileEdito
           username: username || null,
           avatar_url: avatarUrl || null,
         }),
+        cache: 'no-store',
       })
 
       if (response.ok) {

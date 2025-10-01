@@ -36,7 +36,9 @@ export default function UserProfilePage() {
 
   const fetchUserProfile = async () => {
     try {
-      const response = await fetch(`/api/users/${username}`)
+      const response = await fetch(`/api/users/${username}`, {
+        cache: 'no-store',
+      })
       if (response.ok) {
         const data = await response.json()
         setUser(data.user)
@@ -63,6 +65,7 @@ export default function UserProfilePage() {
           userId: currentUser.id,
           email: currentUser.email?.address || `user-${currentUser.id}@example.com`,
         }),
+        cache: 'no-store',
       })
       if (response.ok) {
         const data = await response.json()
