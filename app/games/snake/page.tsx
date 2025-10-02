@@ -22,7 +22,7 @@ export default function SnakePage() {
   // Game state refs (for accessing in game loop)
   const snakeRef = useRef<Position[]>([{ x: 10, y: 10 }])
   const directionRef = useRef({ dx: 0, dy: 0 })
-  const nextDirectionRef = useRef({ dx: 0, dy: 0 })
+  const directionQueueRef = useRef<Array<{ dx: number, dy: number }>>([]) // Queue for rapid key presses
   const foodRef = useRef<Position>({ x: 15, y: 15 })
   const rainbowOrbRef = useRef<Position | null>(null)
   const rainbowOrbActiveRef = useRef(false)
@@ -166,7 +166,7 @@ export default function SnakePage() {
 
     snakeRef.current = [{ x: 10, y: 10 }]
     directionRef.current = { dx: 0, dy: 0 }
-    nextDirectionRef.current = { dx: 0, dy: 0 }
+    directionQueueRef.current = []
     foodRef.current = generateFood()
     rainbowOrbRef.current = null
     rainbowOrbActiveRef.current = false
@@ -184,9 +184,11 @@ export default function SnakePage() {
     if (gameState !== 'playing') return
 
     if (currentTime - lastTimeRef.current > gameSpeedRef.current) {
-      // Update direction
-      directionRef.current = { ...nextDirectionRef.current }
-      
+      // Process next direction from queue if available
+      if (directionQueueRef.current.length > 0) {
+        directionRef.current = directionQueueRef.current.shift()!
+      }
+
       // Don't move if no direction
       if (directionRef.current.dx === 0 && directionRef.current.dy === 0) {
         lastTimeRef.current = currentTime
@@ -216,24 +218,22 @@ export default function SnakePage() {
             localStorage.setItem('snakeHighScore', score.toString())
           }
           
-          // Submit score to database
+          // Submit score to database (fire and forget)
           if (user?.id) {
-            try {
-              await fetch('/api/snake/session', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  userId: user.id,
-                  score: score,
-                  highScore: newHighScore,
-                }),
-                cache: 'no-store',
-              })
-            } catch (error) {
+            fetch('/api/snake/session', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                userId: user.id,
+                score: score,
+                highScore: newHighScore,
+              }),
+              cache: 'no-store',
+            }).catch(error => {
               console.error('Failed to submit Snake session:', error)
-            }
+            })
           }
           
           setGameState('gameOver')
@@ -251,24 +251,22 @@ export default function SnakePage() {
             localStorage.setItem('snakeHighScore', score.toString())
           }
           
-          // Submit score to database
+          // Submit score to database (fire and forget)
           if (user?.id) {
-            try {
-              await fetch('/api/snake/session', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  userId: user.id,
-                  score: score,
-                  highScore: newHighScore,
-                }),
-                cache: 'no-store',
-              })
-            } catch (error) {
+            fetch('/api/snake/session', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                userId: user.id,
+                score: score,
+                highScore: newHighScore,
+              }),
+              cache: 'no-store',
+            }).catch(error => {
               console.error('Failed to submit Snake session:', error)
-            }
+            })
           }
           
           setGameState('gameOver')
@@ -326,33 +324,40 @@ export default function SnakePage() {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (gameState === 'start') return
 
+      // Get the last direction in queue, or current direction if queue is empty
+      const lastDir = directionQueueRef.current.length > 0 
+        ? directionQueueRef.current[directionQueueRef.current.length - 1]
+        : directionRef.current
+
+      let newDir: { dx: number, dy: number } | null = null
+
       switch(e.key) {
         case 'ArrowUp':
         case 'w':
         case 'W':
-          if (directionRef.current.dy !== 1) {
-            nextDirectionRef.current = { dx: 0, dy: -1 }
+          if (lastDir.dy !== 1) {
+            newDir = { dx: 0, dy: -1 }
           }
           break
         case 'ArrowDown':
         case 's':
         case 'S':
-          if (directionRef.current.dy !== -1) {
-            nextDirectionRef.current = { dx: 0, dy: 1 }
+          if (lastDir.dy !== -1) {
+            newDir = { dx: 0, dy: 1 }
           }
           break
         case 'ArrowLeft':
         case 'a':
         case 'A':
-          if (directionRef.current.dx !== 1) {
-            nextDirectionRef.current = { dx: -1, dy: 0 }
+          if (lastDir.dx !== 1) {
+            newDir = { dx: -1, dy: 0 }
           }
           break
         case 'ArrowRight':
         case 'd':
         case 'D':
-          if (directionRef.current.dx !== -1) {
-            nextDirectionRef.current = { dx: 1, dy: 0 }
+          if (lastDir.dx !== -1) {
+            newDir = { dx: 1, dy: 0 }
           }
           break
         case ' ':
@@ -361,6 +366,11 @@ export default function SnakePage() {
             togglePause()
           }
           break
+      }
+
+      // Add to queue if it's a valid direction change (max 3 queued directions)
+      if (newDir && directionQueueRef.current.length < 3) {
+        directionQueueRef.current.push(newDir)
       }
     }
 

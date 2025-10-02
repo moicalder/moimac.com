@@ -229,10 +229,6 @@ export default function SnakeLeaderboard() {
                                       <div className="text-xs text-gray-500">Score</div>
                                       <div className="font-bold text-green-600">{session.score}</div>
                                     </div>
-                                    <div className="text-center">
-                                      <div className="text-xs text-gray-500">High Score</div>
-                                      <div className="font-bold text-purple-600">{session.high_score}</div>
-                                    </div>
                                   </div>
                                 </div>
                               ))}
