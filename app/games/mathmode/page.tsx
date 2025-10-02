@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
 import MathModeLeaderboard from '@/components/MathModeLeaderboard'
@@ -48,6 +48,7 @@ export default function MathModePage() {
   const [lastResult, setLastResult] = useState<Result | null>(null)
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [showNewRecord, setShowNewRecord] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   // Get username for leaderboard
   const userName = user?.email?.address?.split('@')[0] || 'Player'
@@ -152,6 +153,10 @@ export default function MathModePage() {
     setUserAnswer('')
     setShowFeedback(false)
     setLastResult(null)
+    // Auto-focus input after a brief delay to ensure it's rendered
+    setTimeout(() => {
+      inputRef.current?.focus()
+    }, 100)
   }, [generateProblem])
 
   const submitAnswer = useCallback(() => {
@@ -175,6 +180,21 @@ export default function MathModePage() {
   const nextProblem = useCallback(() => {
     startNewProblem()
   }, [startNewProblem])
+
+  // Handle Enter key when showing feedback
+  const handleFeedbackKeyPress = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Enter' && showFeedback) {
+      e.preventDefault()
+      nextProblem()
+    }
+  }, [showFeedback, nextProblem])
+
+  useEffect(() => {
+    if (showFeedback) {
+      window.addEventListener('keydown', handleFeedbackKeyPress)
+      return () => window.removeEventListener('keydown', handleFeedbackKeyPress)
+    }
+  }, [showFeedback, handleFeedbackKeyPress])
 
   const finishSession = useCallback(async () => {
     if (results.length > 0) {
@@ -406,6 +426,7 @@ export default function MathModePage() {
             {!showFeedback ? (
               <div className="space-y-4">
                 <input
+                  ref={inputRef}
                   type="number"
                   placeholder="Your answer"
                   value={userAnswer}
@@ -441,6 +462,9 @@ export default function MathModePage() {
                       The correct answer was {lastResult?.correctAnswer}
                     </div>
                   )}
+                </div>
+                <div className="text-xs text-gray-500 text-center mb-2">
+                  Press <kbd className="px-2 py-1 bg-gray-200 rounded">Enter</kbd> for next problem
                 </div>
                 <div className="flex gap-4">
                   <button
