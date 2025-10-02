@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 type Operator = '+' | '-' | '×' | '÷' | 'global'
 
@@ -185,9 +185,8 @@ export default function MathModeLeaderboard({ operator = 'global' }: MathModeLea
             </thead>
             <tbody>
               {leaderboard.map((entry, index) => (
-                <>
+                <React.Fragment key={entry.username}>
                   <tr 
-                    key={entry.username}
                     className={`border-b border-gray-100 hover:bg-gray-50 ${
                       index < 3 ? 'bg-yellow-50' : ''
                     } ${expandedUser === entry.username ? 'bg-blue-50' : ''}`}
@@ -332,7 +331,7 @@ export default function MathModeLeaderboard({ operator = 'global' }: MathModeLea
                       </td>
                     </tr>
                   )}
-                </>
+                </React.Fragment>
               ))}
             </tbody>
           </table>
