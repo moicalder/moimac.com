@@ -13,8 +13,7 @@ export async function GET() {
     const { rows } = await sql`
       SELECT 
         m.*,
-        u.username,
-        u.email
+        u.username
       FROM mathmode_sessions m
       JOIN users u ON m.user_id = u.id
       ORDER BY m.created_at DESC
