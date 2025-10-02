@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import ProfileEditor from '@/components/ProfileEditor'
 import UserDirectory from '@/components/UserDirectory'
 import MathModeLeaderboard from '@/components/MathModeLeaderboard'
+import SnakeLeaderboard from '@/components/SnakeLeaderboard'
 
 interface UserProfile {
   username: string | null
@@ -215,6 +216,11 @@ export default function Home() {
         {/* MathMode Leaderboard */}
         <div className="mt-12">
           <MathModeLeaderboard />
+        </div>
+
+        {/* Snake Leaderboard */}
+        <div className="mt-12">
+          <SnakeLeaderboard />
         </div>
 
         {/* User Directory */}
