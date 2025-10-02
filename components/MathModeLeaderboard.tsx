@@ -40,16 +40,24 @@ export default function MathModeLeaderboard({ operator = 'global' }: MathModeLea
       
       const response = await fetch(url, {
         cache: 'no-store',
+        next: { revalidate: 0 },
         headers: {
-          'Cache-Control': 'no-cache',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
         }
       })
       
       if (response.ok) {
         const data = await response.json()
-        console.log('Leaderboard data:', { operator: op, count: data.leaderboard.length, timestamp: data.timestamp })
+        console.log('Leaderboard fetch:', { 
+          operator: op, 
+          entries: data.leaderboard.length, 
+          timestamp: data.timestamp,
+          firstEntry: data.leaderboard[0] 
+        })
         setLeaderboard(data.leaderboard)
+      } else {
+        console.error('Leaderboard fetch failed:', response.status)
       }
     } catch (error) {
       console.error('Error fetching leaderboard:', error)

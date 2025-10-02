@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 
-// Force dynamic rendering
+// Force dynamic rendering - never cache this route
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 type Operator = '+' | '-' | '×' | '÷'
 
