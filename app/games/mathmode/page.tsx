@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
+import MathModeLeaderboard from '@/components/MathModeLeaderboard'
 
 type Operator = '+' | '-' | '×' | '÷'
 type GameState = 'operator' | 'digits' | 'playing' | 'results' | 'leaderboard'
@@ -175,13 +176,16 @@ export default function MathModePage() {
     startNewProblem()
   }, [startNewProblem])
 
-  const finishSession = useCallback(() => {
+  const finishSession = useCallback(async () => {
     if (results.length > 0) {
       const correctCount = results.filter(r => r.isCorrect).length
       const totalCount = results.length
+      const incorrectCount = totalCount - correctCount
       const percentage = Math.round((correctCount / totalCount) * 100)
       const score = calculateScore(correctCount, totalCount, percentage)
+      const avgDifficulty = (digits1 + digits2) / 2
       
+      // Save to local leaderboard
       const entry: LeaderboardEntry = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         name: userName,
@@ -196,9 +200,32 @@ export default function MathModePage() {
       
       const isNewRecord = saveToLeaderboard(entry)
       setShowNewRecord(isNewRecord)
+
+      // Submit to database
+      if (user?.id) {
+        try {
+          await fetch('/api/mathmode/session', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: user.id,
+              operator: selectedOperator,
+              totalQuestions: totalCount,
+              correctAnswers: correctCount,
+              incorrectAnswers: incorrectCount,
+              difficulty: avgDifficulty,
+            }),
+            cache: 'no-store',
+          })
+        } catch (error) {
+          console.error('Failed to submit session:', error)
+        }
+      }
     }
     setGameState('results')
-  }, [results, userName, selectedOperator, calculateScore, getDifficultyString, saveToLeaderboard])
+  }, [results, user, selectedOperator, digits1, digits2, userName, calculateScore, getDifficultyString, saveToLeaderboard])
 
   const playAgain = useCallback(() => {
     setGameState('operator')
@@ -466,12 +493,40 @@ export default function MathModePage() {
               </div>
             )}
 
-            <button
-              onClick={playAgain}
-              className="btn-primary w-full"
-            >
-              Play Again
-            </button>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setGameState('leaderboard')}
+                className="btn-secondary flex-1"
+              >
+                View Leaderboard
+              </button>
+              <button
+                onClick={playAgain}
+                className="btn-primary flex-1"
+              >
+                Play Again
+              </button>
+            </div>
+          </div>
+        )}
+
+        {gameState === 'leaderboard' && (
+          <div>
+            <MathModeLeaderboard operator={selectedOperator} />
+            <div className="flex gap-4 mt-6">
+              <button
+                onClick={() => router.push('/')}
+                className="btn-secondary flex-1"
+              >
+                Back to Home
+              </button>
+              <button
+                onClick={playAgain}
+                className="btn-primary flex-1"
+              >
+                Play Again
+              </button>
+            </div>
           </div>
         )}
       </div>
