@@ -23,6 +23,8 @@ interface Session {
   correct_answers: number
   incorrect_answers: number
   difficulty: number
+  digits1: number | null
+  digits2: number | null
   accuracy_percentage: number
   created_at: string
 }
@@ -41,6 +43,9 @@ export default function MathModeLeaderboard({ operator = 'global' }: MathModeLea
 
   useEffect(() => {
     fetchLeaderboard(selectedOperator)
+    // Auto-collapse when operator changes
+    setExpandedUser(null)
+    setUserSessions([])
   }, [selectedOperator])
 
   const fetchLeaderboard = async (op: Operator) => {
@@ -286,6 +291,12 @@ export default function MathModeLeaderboard({ operator = 'global' }: MathModeLea
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-6">
+                                    {session.digits1 && session.digits2 && (
+                                      <div className="text-center">
+                                        <div className="text-xs text-gray-500">Digits</div>
+                                        <div className="font-bold text-indigo-600">{session.digits1}×{session.digits2}</div>
+                                      </div>
+                                    )}
                                     <div className="text-center">
                                       <div className="text-xs text-gray-500">Difficulty</div>
                                       <div className="font-bold text-purple-600">{session.difficulty}</div>

@@ -33,6 +33,8 @@ export async function GET(request: NextRequest) {
           m.correct_answers,
           m.incorrect_answers,
           m.difficulty,
+          m.digits1,
+          m.digits2,
           m.created_at,
           ROUND(
             (m.correct_answers::numeric / NULLIF(m.total_questions, 0)) * 100,
@@ -53,6 +55,8 @@ export async function GET(request: NextRequest) {
           m.correct_answers,
           m.incorrect_answers,
           m.difficulty,
+          m.digits1,
+          m.digits2,
           m.created_at,
           ROUND(
             (m.correct_answers::numeric / NULLIF(m.total_questions, 0)) * 100,

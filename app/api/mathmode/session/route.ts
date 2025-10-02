@@ -14,6 +14,8 @@ interface SessionData {
   correctAnswers: number
   incorrectAnswers: number
   difficulty: number  // Average of (digits1 + digits2)
+  digits1?: number
+  digits2?: number
 }
 
 /**
@@ -23,7 +25,7 @@ interface SessionData {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { userId, operator, totalQuestions, correctAnswers, incorrectAnswers, difficulty }: SessionData = body
+    const { userId, operator, totalQuestions, correctAnswers, incorrectAnswers, difficulty, digits1, digits2 }: SessionData = body
 
     if (!userId || !operator || totalQuestions === undefined) {
       return NextResponse.json(
@@ -40,14 +42,18 @@ export async function POST(request: NextRequest) {
         total_questions,
         correct_answers,
         incorrect_answers,
-        difficulty
+        difficulty,
+        digits1,
+        digits2
       ) VALUES (
         ${userId},
         ${operator},
         ${totalQuestions},
         ${correctAnswers},
         ${incorrectAnswers},
-        ${difficulty}
+        ${difficulty},
+        ${digits1 || null},
+        ${digits2 || null}
       )
       RETURNING id;
     `

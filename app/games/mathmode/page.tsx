@@ -216,6 +216,8 @@ export default function MathModePage() {
               correctAnswers: correctCount,
               incorrectAnswers: incorrectCount,
               difficulty: avgDifficulty,
+              digits1: digits1,
+              digits2: digits2,
             }),
             cache: 'no-store',
           })
