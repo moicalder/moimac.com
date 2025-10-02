@@ -258,9 +258,12 @@ export default function MathModeLeaderboard({ operator = 'global' }: MathModeLea
                     <td className="p-3 text-right">
                       <button
                         onClick={() => toggleUserExpansion(entry.username)}
-                        className="text-blue-600 hover:text-blue-800 font-medium underline"
+                        className="text-gray-700 hover:text-gray-900 font-medium flex items-center gap-1 ml-auto"
                       >
-                        {entry.sessions_played} {expandedUser === entry.username ? '▼' : '▶'}
+                        <span>{entry.sessions_played}</span>
+                        <span className="text-gray-500 text-sm">
+                          {expandedUser === entry.username ? '▼' : '▶'}
+                        </span>
                       </button>
                     </td>
                   </tr>
