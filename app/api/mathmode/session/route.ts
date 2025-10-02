@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert session record
-    await sql`
+    const result = await sql`
       INSERT INTO mathmode_sessions (
         user_id,
         operator,
@@ -47,15 +47,29 @@ export async function POST(request: NextRequest) {
         ${correctAnswers},
         ${incorrectAnswers},
         ${difficulty}
-      );
+      )
+      RETURNING id;
     `
+
+    console.log('Session saved:', {
+      id: result.rows[0]?.id,
+      userId,
+      operator,
+      totalQuestions,
+      correctAnswers,
+      incorrectAnswers,
+      difficulty
+    })
 
     return NextResponse.json({ 
       success: true,
-      message: 'Session recorded'
+      message: 'Session recorded',
+      sessionId: result.rows[0]?.id
     }, {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
       }
     })
   } catch (error) {

@@ -32,16 +32,23 @@ export default function MathModeLeaderboard({ operator = 'global' }: MathModeLea
   const fetchLeaderboard = async (op: Operator) => {
     setLoading(true)
     try {
+      // Add timestamp to bust cache
+      const timestamp = new Date().getTime()
       const url = op === 'global' 
-        ? '/api/mathmode/leaderboard'
-        : `/api/mathmode/leaderboard?operator=${encodeURIComponent(op)}`
+        ? `/api/mathmode/leaderboard?_t=${timestamp}`
+        : `/api/mathmode/leaderboard?operator=${encodeURIComponent(op)}&_t=${timestamp}`
       
       const response = await fetch(url, {
         cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        }
       })
       
       if (response.ok) {
         const data = await response.json()
+        console.log('Leaderboard data:', { operator: op, count: data.leaderboard.length, timestamp: data.timestamp })
         setLeaderboard(data.leaderboard)
       }
     } catch (error) {

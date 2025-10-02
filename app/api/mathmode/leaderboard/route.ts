@@ -67,10 +67,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ 
       leaderboard: rows,
-      operator: operator || 'global'
+      operator: operator || 'global',
+      timestamp: new Date().toISOString()
     }, {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
       }
     })
   } catch (error) {
