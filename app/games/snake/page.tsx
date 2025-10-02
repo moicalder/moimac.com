@@ -78,6 +78,11 @@ export default function SnakePage() {
   }, [])
 
   const resetGame = useCallback(() => {
+    // Cancel any existing animation frame
+    if (animationIdRef.current) {
+      cancelAnimationFrame(animationIdRef.current)
+    }
+
     snakeRef.current = [{ x: 10, y: 10 }]
     directionRef.current = { dx: 0, dy: 0 }
     nextDirectionRef.current = { dx: 0, dy: 0 }
@@ -87,8 +92,12 @@ export default function SnakePage() {
     rainbowOrbStartTimeRef.current = 0
     nextRainbowOrbTimeRef.current = 0
     gameSpeedRef.current = 150
+    lastTimeRef.current = 0
     setScore(0)
-  }, [generateFood])
+    
+    // Redraw the initial state
+    drawGame()
+  }, [generateFood, drawGame])
 
   const drawGame = useCallback(() => {
     const canvas = canvasRef.current
