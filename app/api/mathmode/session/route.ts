@@ -58,6 +58,14 @@ export async function POST(request: NextRequest) {
       RETURNING id;
     `
 
+    // Increment total_games_played for the user
+    await sql`
+      UPDATE users 
+      SET total_games_played = total_games_played + 1,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${userId};
+    `
+
     console.log('Session saved:', {
       id: result.rows[0]?.id,
       userId,
