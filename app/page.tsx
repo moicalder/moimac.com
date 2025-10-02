@@ -75,7 +75,7 @@ export default function Home() {
       name: 'MathMode',
       description: 'Practice math with addition, subtraction, multiplication, and division',
       icon: '🔢',
-      status: 'coming-soon',
+      status: 'available',
     },
     {
       id: 'snake',
