@@ -4,6 +4,7 @@ import { usePrivy } from '@privy-io/react-auth'
 import { useEffect, useState } from 'react'
 import ProfileEditor from '@/components/ProfileEditor'
 import UserDirectory from '@/components/UserDirectory'
+import MathModeLeaderboard from '@/components/MathModeLeaderboard'
 
 interface UserProfile {
   username: string | null
