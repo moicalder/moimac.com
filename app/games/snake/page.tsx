@@ -77,28 +77,6 @@ export default function SnakePage() {
     return orb
   }, [])
 
-  const resetGame = useCallback(() => {
-    // Cancel any existing animation frame
-    if (animationIdRef.current) {
-      cancelAnimationFrame(animationIdRef.current)
-    }
-
-    snakeRef.current = [{ x: 10, y: 10 }]
-    directionRef.current = { dx: 0, dy: 0 }
-    nextDirectionRef.current = { dx: 0, dy: 0 }
-    foodRef.current = generateFood()
-    rainbowOrbRef.current = null
-    rainbowOrbActiveRef.current = false
-    rainbowOrbStartTimeRef.current = 0
-    nextRainbowOrbTimeRef.current = 0
-    gameSpeedRef.current = 150
-    lastTimeRef.current = 0
-    setScore(0)
-    
-    // Redraw the initial state
-    drawGame()
-  }, [generateFood, drawGame])
-
   const drawGame = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -179,6 +157,28 @@ export default function SnakePage() {
       ctx.fill()
     }
   }, [])
+
+  const resetGame = useCallback(() => {
+    // Cancel any existing animation frame
+    if (animationIdRef.current) {
+      cancelAnimationFrame(animationIdRef.current)
+    }
+
+    snakeRef.current = [{ x: 10, y: 10 }]
+    directionRef.current = { dx: 0, dy: 0 }
+    nextDirectionRef.current = { dx: 0, dy: 0 }
+    foodRef.current = generateFood()
+    rainbowOrbRef.current = null
+    rainbowOrbActiveRef.current = false
+    rainbowOrbStartTimeRef.current = 0
+    nextRainbowOrbTimeRef.current = 0
+    gameSpeedRef.current = 150
+    lastTimeRef.current = 0
+    setScore(0)
+    
+    // Redraw the initial state
+    drawGame()
+  }, [generateFood, drawGame])
 
   const gameLoop = useCallback((currentTime: number) => {
     if (gameState !== 'playing') return
