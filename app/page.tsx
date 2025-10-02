@@ -211,6 +211,11 @@ export default function Home() {
           ))}
         </div>
 
+        {/* MathMode Leaderboard */}
+        <div className="mt-12">
+          <MathModeLeaderboard />
+        </div>
+
         {/* User Directory */}
         <UserDirectory />
       </div>
