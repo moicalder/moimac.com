@@ -293,7 +293,7 @@ export default function MathModeLeaderboard({ operator = 'global' }: MathModeLea
                                     {session.digits1 && session.digits2 && (
                                       <div className="text-center">
                                         <div className="text-xs text-gray-500">Digits</div>
-                                        <div className="font-bold text-indigo-600">{session.digits1}×{session.digits2}</div>
+                                        <div className="font-bold text-indigo-600">{session.digits1},{session.digits2}</div>
                                       </div>
                                     )}
                                     <div className="text-center">
