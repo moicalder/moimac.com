@@ -83,7 +83,7 @@ export default function Home() {
       name: 'Snake',
       description: 'Classic snake game with modern twist',
       icon: '🐍',
-      status: 'coming-soon',
+      status: 'available',
     },
     {
       id: 'runner',
