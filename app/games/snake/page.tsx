@@ -13,7 +13,7 @@ interface Position {
 
 export default function SnakePage() {
   const router = useRouter()
-  const { ready, authenticated } = usePrivy()
+  const { ready, authenticated, user } = usePrivy()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [gameState, setGameState] = useState<GameState>('start')
   const [score, setScore] = useState(0)
@@ -209,11 +209,34 @@ export default function SnakePage() {
           if (head.y < 0) head.y = TILE_COUNT - 1
           else if (head.y >= TILE_COUNT) head.y = 0
         } else {
-          setGameState('gameOver')
+          // Save high score
+          const newHighScore = score > highScore ? score : highScore
           if (score > highScore) {
             setHighScore(score)
             localStorage.setItem('snakeHighScore', score.toString())
           }
+          
+          // Submit score to database
+          if (user?.id) {
+            try {
+              await fetch('/api/snake/session', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  userId: user.id,
+                  score: score,
+                  highScore: newHighScore,
+                }),
+                cache: 'no-store',
+              })
+            } catch (error) {
+              console.error('Failed to submit Snake session:', error)
+            }
+          }
+          
+          setGameState('gameOver')
           return
         }
       }
@@ -221,11 +244,34 @@ export default function SnakePage() {
       // Check self collision
       for (const segment of snakeRef.current) {
         if (head.x === segment.x && head.y === segment.y) {
-          setGameState('gameOver')
+          // Save high score
+          const newHighScore = score > highScore ? score : highScore
           if (score > highScore) {
             setHighScore(score)
             localStorage.setItem('snakeHighScore', score.toString())
           }
+          
+          // Submit score to database
+          if (user?.id) {
+            try {
+              await fetch('/api/snake/session', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  userId: user.id,
+                  score: score,
+                  highScore: newHighScore,
+                }),
+                cache: 'no-store',
+              })
+            } catch (error) {
+              console.error('Failed to submit Snake session:', error)
+            }
+          }
+          
+          setGameState('gameOver')
           return
         }
       }
