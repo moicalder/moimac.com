@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 
-type LessonId = 'home-row' | 'top-row' | 'bottom-row' | 'numbers' | 'all-keys' | 'global'
+type LessonId = 'home-row' | 'top-row' | 'bottom-row' | 'numbers' | 'all-keys' | 'global' | 'custom'
 
 interface LeaderboardEntry {
   username: string
