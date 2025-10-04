@@ -6,6 +6,7 @@ import ProfileEditor from '@/components/ProfileEditor'
 import UserDirectory from '@/components/UserDirectory'
 import MathModeLeaderboard from '@/components/MathModeLeaderboard'
 import SnakeLeaderboard from '@/components/SnakeLeaderboard'
+import TypeMasterLeaderboard from '@/components/TypeMasterLeaderboard'
 
 interface UserProfile {
   username: string | null
@@ -86,14 +87,21 @@ export default function Home() {
       icon: '🐍',
       status: 'available',
     },
-    {
-      id: 'runner',
-      name: 'Pixel Runner',
-      description: 'Pixel-perfect retro platformer',
-      icon: '🎮',
-      status: 'coming-soon',
-    },
-  ]
+      {
+        id: 'typemaster',
+        name: 'TypeMaster',
+        description: 'Learn to type like a pro with proper finger placement',
+        icon: '⌨️',
+        status: 'available',
+      },
+      {
+        id: 'runner',
+        name: 'Pixel Runner',
+        description: 'Pixel-perfect retro platformer',
+        icon: '🎮',
+        status: 'coming-soon',
+      },
+    ]
 
   if (!ready) {
     return (
@@ -221,6 +229,11 @@ export default function Home() {
         {/* Snake Leaderboard */}
         <div className="mt-12">
           <SnakeLeaderboard />
+        </div>
+
+        {/* TypeMaster Leaderboard */}
+        <div className="mt-12">
+          <TypeMasterLeaderboard />
         </div>
 
         {/* User Directory */}

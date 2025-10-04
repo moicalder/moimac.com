@@ -1,0 +1,37 @@
+{
+  "lists": [
+    {
+      "id": "week-oct-5",
+      "name": "Spelling Words - Week of Oct 5th",
+      "words": [
+        "acknowledge",
+        "rhythm",
+        "necessary",
+        "separate",
+        "definitely",
+        "accommodate",
+        "Wednesday",
+        "pronunciation",
+        "conscience",
+        "occurrence"
+      ]
+    },
+    {
+      "id": "common-mistakes",
+      "name": "Commonly Misspelled Words",
+      "words": [
+        "beginning",
+        "believe",
+        "embarrass",
+        "existence",
+        "occurred",
+        "receive",
+        "referred",
+        "restaurant",
+        "tomorrow",
+        "until"
+      ]
+    }
+  ]
+}
+
