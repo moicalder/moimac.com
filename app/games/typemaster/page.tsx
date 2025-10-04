@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
 
-type GameMode = 'menu' | 'tutorial' | 'practice' | 'challenge' | 'select-list'
+type GameMode = 'menu' | 'tutorial' | 'practice' | 'challenge' | 'results' | 'select-list'
 type Lesson = 'home-row' | 'top-row' | 'bottom-row' | 'numbers' | 'all-keys'
 
 interface LessonConfig {
