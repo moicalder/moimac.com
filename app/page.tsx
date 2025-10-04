@@ -94,13 +94,6 @@ export default function Home() {
         icon: '⌨️',
         status: 'available',
       },
-      {
-        id: 'runner',
-        name: 'Pixel Runner',
-        description: 'Pixel-perfect retro platformer',
-        icon: '🎮',
-        status: 'coming-soon',
-      },
     ]
 
   if (!ready) {
