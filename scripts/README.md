@@ -2,65 +2,103 @@
 
 Useful scripts for managing the MoiMac project.
 
-## add-spelling-list.js
+## Spelling List Manager
 
-Adds a new word list to the TypeMaster spelling lists from a text file.
+A comprehensive tool for managing spelling lists in TypeMaster.
 
 ### Usage
 
 ```bash
+# Interactive mode (no arguments)
+node scripts/add-spelling-list.js
+
+# Import from file
 node scripts/add-spelling-list.js <words-file>
 ```
 
-### Examples
+### Interactive Mode
 
-#### Comma-separated words:
-```bash
-echo "apple, banana, cherry, date" > my-words.txt
-node scripts/add-spelling-list.js my-words.txt
+Run without arguments for full management interface:
+
+```
+🎯 Spelling List Manager
+=======================
+
+📚 Found 3 spelling list(s):
+  1. Spelling Bee - Week 1 (10 words)
+  2. Vocabulary List (15 words)
+  3. Common Words (25 words)
+
+What would you like to do? (v)iew, (d)elete, (a)dd, (q)uit:
 ```
 
-#### Line-separated words:
+### Commands
+
+#### View Lists
+- `v` or `view` - Show all words in a specific list
+- `a` or `add` - Create a new list interactively
+- `d` or `delete` - Delete an existing list
+- `q` or `quit` - Exit the manager
+
+#### File Import Mode
+
+When you provide a file path, it imports words from that file:
+
 ```bash
-cat > my-words.txt << 'EOF'
+# Comma-separated
+echo "apple, banana, cherry" > words.txt
+node scripts/add-spelling-list.js words.txt
+
+# Line-separated
+cat > words.txt << 'EOF'
 accommodate
 rhythm
 necessary
-separate
-definitely
 EOF
-node scripts/add-spelling-list.js my-words.txt
+node scripts/add-spelling-list.js words.txt
 ```
 
-### How it works:
+### Interactive Add Mode
 
-1. **Reads the file** and parses words intelligently
-2. **Handles multiple formats:**
-   - Comma-separated: `word1, word2, word3`
-   - Line-separated: one word per line
-   - Space-separated: `word1 word2 word3`
-3. **Asks for list name** interactively
-4. **Generates unique ID** from the name
-5. **Updates** `spelling-lists/spelling-lists.json`
-6. **Handles duplicates** by updating existing lists
-
-### Output Example:
+When adding a new list interactively:
 
 ```
-📝 Found 10 words in my-words.txt:
-accommodate, rhythm, necessary, separate...
+🏷️  Enter list name: My Spelling Words
 
-🏷️  Enter list name: Spelling Bee Words
+📝 Adding words to "My Spelling Words". Type each word and press Enter.
+   Press Enter twice (empty line) when finished.
 
-✅ Created new list: "Spelling Bee Words"
-🎉 Successfully added 10 words to "Spelling Bee Words"
-📁 Updated: spelling-lists/spelling-lists.json
+Word 1: accommodate
+Word 2: rhythm
+Word 3: necessary
+
+Word 4: [empty line - finishes]
+
+✅ Created new list: "My Spelling Words"
+🎉 Successfully added 3 words to "My Spelling Words"
 ```
 
-### Tips:
+### File Format Support
 
-- Words are automatically trimmed and filtered (empty words removed)
-- List names can contain spaces and special characters
-- IDs are generated automatically (lowercase, hyphens instead of spaces)
-- Existing lists with the same generated ID will be updated
-- Perfect for adding kids' spelling homework or vocabulary lists!
+The script intelligently parses different formats:
+
+- **Comma-separated:** `word1, word2, word3`
+- **Line-separated:** One word per line
+- **Space-separated:** `word1 word2 word3`
+- **Mixed formats:** Automatically detects the best parsing method
+
+### Features
+
+- ✅ **Smart parsing** - handles multiple file formats
+- ✅ **Interactive management** - view, delete, add lists
+- ✅ **Duplicate handling** - updates existing lists or creates new ones
+- ✅ **ID generation** - creates unique IDs from list names
+- ✅ **Validation** - ensures list names and words are valid
+- ✅ **Error handling** - graceful error messages and recovery
+
+### Tips
+
+- Perfect for kids' spelling homework!
+- Great for weekly vocabulary lists
+- Use for language learning word collections
+- Import from school worksheets or online lists
