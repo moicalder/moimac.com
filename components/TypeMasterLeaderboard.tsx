@@ -293,7 +293,7 @@ export default function TypeMasterLeaderboard() {
                                     <span className="text-gray-500">#{idx + 1}</span>
                                     <span className="font-semibold text-primary-600">
                                       {session.lesson_id.startsWith('custom-')
-                                        ? (session.customListName || 'Custom List')
+                                        ? (session.customListName || session.lesson_id.replace('custom-', ''))
                                         : getLessonName(session.lesson_id)
                                       }
                                     </span>

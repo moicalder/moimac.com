@@ -295,7 +295,7 @@ export default function TypeMasterPage() {
     const finalWpm = calculateWPM()
     const finalAccuracy = totalKeysPressed > 0 ? Math.round((correctKeys / totalKeysPressed) * 100) : 0
     const durationSeconds = startTime ? Math.round((Date.now() - startTime) / 1000) : 0
-    
+
     console.log('🎯 TypeMaster session completed!', {
       lesson: currentLesson.id,
       wpm: finalWpm,
@@ -303,7 +303,7 @@ export default function TypeMasterPage() {
       mistakes,
       duration: durationSeconds
     })
-    
+
     // Save to database
     if (user?.id) {
       try {
@@ -323,11 +323,11 @@ export default function TypeMasterPage() {
           mistakes: mistakes,
           durationSeconds: durationSeconds,
           wordsCompleted: currentLesson.practiceText.length,
-          customListName: selectedList?.name || null
+          customListName: selectedList?.name || undefined
         }),
           cache: 'no-store',
         })
-        
+
         if (response.ok) {
           const data = await response.json()
           console.log('✅ Session saved successfully!', data)
@@ -341,13 +341,10 @@ export default function TypeMasterPage() {
       console.warn('⚠️ No user ID - session not saved')
     }
 
-    // Show results
-    alert(`🎉 Great job!\n\nLesson: ${currentLesson.name}\nWPM: ${finalWpm}\nAccuracy: ${finalAccuracy}%\nMistakes: ${mistakes}\nTime: ${durationSeconds}s\n\n✅ Session saved to leaderboard!`)
-    
-    // Reset
-    setGameMode('menu')
-    resetGame()
+    // Show results screen instead of immediately resetting
+    setGameMode('results')
   }
+
 
   const resetGame = () => {
     setUserInput('')
@@ -527,6 +524,65 @@ export default function TypeMasterPage() {
                 className="btn-secondary"
               >
                 ← Back to Lessons
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Results Screen */}
+        {gameMode === 'results' && (
+          <div className="card text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">
+              🎉 Session Complete!
+            </h2>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="text-sm text-blue-600 font-medium">Final WPM</div>
+                <div className="text-3xl font-bold text-blue-700">
+                  {Math.round(calculateWPM())}
+                </div>
+              </div>
+
+              <div className="bg-green-50 p-4 rounded-lg">
+                <div className="text-sm text-green-600 font-medium">Accuracy</div>
+                <div className="text-3xl font-bold text-green-700">
+                  {totalKeysPressed > 0 ? Math.round((correctKeys / totalKeysPressed) * 100) : 0}%
+                </div>
+              </div>
+
+              <div className="bg-purple-50 p-4 rounded-lg">
+                <div className="text-sm text-purple-600 font-medium">Words</div>
+                <div className="text-3xl font-bold text-purple-700">
+                  {currentLesson.practiceText.length}
+                </div>
+              </div>
+
+              <div className="bg-orange-50 p-4 rounded-lg">
+                <div className="text-sm text-orange-600 font-medium">Mistakes</div>
+                <div className="text-3xl font-bold text-orange-700">
+                  {mistakes}
+                </div>
+              </div>
+            </div>
+
+            <div className="text-gray-600 mb-8">
+              {selectedList ? (
+                <p>Great job on <strong>{selectedList.name}</strong>!</p>
+              ) : (
+                <p>Great job on <strong>{currentLesson.name}</strong>!</p>
+              )}
+            </div>
+
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => {
+                  setGameMode('menu')
+                  resetGame()
+                }}
+                className="btn-primary"
+              >
+                📋 Back to Menu
               </button>
             </div>
           </div>

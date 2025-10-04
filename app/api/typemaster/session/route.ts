@@ -33,7 +33,8 @@ export async function POST(request: NextRequest) {
       correctKeys,
       mistakes,
       durationSeconds,
-      wordsCompleted
+      wordsCompleted,
+      customListName
     }: SessionData = body
 
     if (!userId || !lessonId || wpm === undefined) {
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
         ${mistakes},
         ${durationSeconds},
         ${wordsCompleted},
-        ${customListName || null}
+        ${customListName !== undefined ? customListName : null}
       )
       RETURNING id;
     `
