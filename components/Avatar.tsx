@@ -98,8 +98,6 @@ export default function Avatar({ avatarUrl, username, size = 'md', className = '
             width: '100%',
             height: '100%',
             imageRendering: 'pixelated',
-            imageRendering: '-moz-crisp-edges' as any,
-            imageRendering: 'crisp-edges' as any,
           }}
         />
       </div>

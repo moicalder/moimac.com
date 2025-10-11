@@ -12,7 +12,14 @@ interface PublicUser {
   created_at: string
 }
 
-export default function UserDirectory() {
+interface UserDirectoryProps {
+  currentUserProfile?: {
+    username: string | null
+    avatar_url: string | null
+  } | null
+}
+
+export default function UserDirectory({ currentUserProfile }: UserDirectoryProps) {
   const router = useRouter()
   const [users, setUsers] = useState<PublicUser[]>([])
   const [loading, setLoading] = useState(true)
@@ -23,7 +30,8 @@ export default function UserDirectory() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/users', {
+      const timestamp = Date.now()
+      const response = await fetch(`/api/users?_t=${timestamp}`, {
         cache: 'no-store',
       })
       if (response.ok) {
@@ -68,20 +76,27 @@ export default function UserDirectory() {
       </h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {users.map((user) => (
-          <button
-            key={user.username}
-            onClick={() => router.push(`/users/${user.username}`)}
-            className="flex items-center gap-3 p-4 rounded-lg border-2 border-gray-200 
-                     hover:border-primary-400 hover:bg-primary-50 transition-all duration-200
-                     text-left group"
-          >
-            {/* Avatar */}
-            <Avatar 
-              avatarUrl={user.avatar_url}
-              username={user.username}
-              size="md"
-            />
+        {users.map((user) => {
+          // Use current user's fresh profile data if this is them
+          const isCurrentUser = currentUserProfile?.username === user.username
+          const displayAvatarUrl = isCurrentUser && currentUserProfile?.avatar_url 
+            ? currentUserProfile.avatar_url 
+            : user.avatar_url
+          
+          return (
+            <button
+              key={user.username}
+              onClick={() => router.push(`/users/${user.username}`)}
+              className="flex items-center gap-3 p-4 rounded-lg border-2 border-gray-200 
+                       hover:border-primary-400 hover:bg-primary-50 transition-all duration-200
+                       text-left group"
+            >
+              {/* Avatar */}
+              <Avatar 
+                avatarUrl={displayAvatarUrl}
+                username={user.username}
+                size="md"
+              />
 
             {/* Info */}
             <div className="flex-1 min-w-0">
@@ -95,12 +110,13 @@ export default function UserDirectory() {
               </div>
             </div>
 
-            {/* Arrow */}
-            <div className="text-gray-400 group-hover:text-primary-500 transition-colors">
-              →
-            </div>
-          </button>
-        ))}
+              {/* Arrow */}
+              <div className="text-gray-400 group-hover:text-primary-500 transition-colors">
+                →
+              </div>
+            </button>
+          )
+        })}
       </div>
     </div>
   )

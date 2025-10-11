@@ -230,7 +230,7 @@ export default function Home() {
         </div>
 
         {/* User Directory */}
-        <UserDirectory />
+        <UserDirectory currentUserProfile={profile} />
       </div>
     </main>
   )
