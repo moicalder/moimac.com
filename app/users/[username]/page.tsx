@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { usePrivy } from '@privy-io/react-auth'
+import InventoryManager from '../../../components/InventoryManager'
 
 interface PublicUser {
   username: string
@@ -192,6 +193,13 @@ export default function UserProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* Inventory Manager - Only show for own profile */}
+        {isOwnProfile && (
+          <div className="mb-6">
+            <InventoryManager />
+          </div>
+        )}
 
         {/* Placeholder for future content */}
         <div className="card">
