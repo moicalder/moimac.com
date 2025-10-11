@@ -40,7 +40,6 @@ export default function StarFighterPage() {
   const gamepad = useGamepad()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const playerSpriteCanvasRef = useRef<HTMLCanvasElement>(null)
-  const defaultSpriteCanvasRef = useRef<HTMLCanvasElement>(null)
   const [gameState, setGameState] = useState<GameState>('vehicleSelect')
   const [score, setScore] = useState(0)
   const [highScore, setHighScore] = useState(0)
@@ -95,47 +94,6 @@ export default function StarFighterPage() {
     if (saved) setHighScore(parseInt(saved))
   }, [])
 
-  // Render default spaceship sprite on mount
-  useEffect(() => {
-    if (!defaultSpriteCanvasRef.current) return
-
-    const canvas = defaultSpriteCanvasRef.current
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    // Import color palette
-    import('../../../color-palette.json').then((module) => {
-      const colorPalette = module.default
-      
-      // Clear canvas
-      ctx.clearRect(0, 0, 64, 64)
-
-      // Parse bitmap string
-      const bytes = DEFAULT_SPACESHIP.match(/.{1,2}/g) || []
-      
-      for (let i = 0; i < bytes.length && i < 4096; i++) {
-        const colorIndex = parseInt(bytes[i], 16)
-        
-        if (isNaN(colorIndex) || colorIndex >= colorPalette.allColors.length) {
-          continue
-        }
-
-        const color = colorPalette.allColors[colorIndex]
-        
-        // Skip transparent pixels
-        if (color === 'transparent') {
-          continue
-        }
-
-        const x = i % 64
-        const y = Math.floor(i / 64)
-
-        ctx.fillStyle = color
-        ctx.fillRect(x, y, 1, 1)
-      }
-    })
-  }, [])
-
   // Update gamepad state ref and handle pause + vehicle selection
   useEffect(() => {
     gamepadStateRef.current = gamepad
@@ -174,6 +132,13 @@ export default function StarFighterPage() {
       }
     }
     
+    // Handle A button or Start to begin game from start screen
+    if (gameState === 'start' && spriteReady) {
+      if ((gamepad.buttonA && !lastGamepadARef.current) || (gamepad.start && !lastGamepadStartRef.current)) {
+        startGame()
+      }
+    }
+    
     // Handle Start button for pause during gameplay
     if (gamepad.start && !lastGamepadStartRef.current) {
       if (gameState === 'playing') {
@@ -187,7 +152,7 @@ export default function StarFighterPage() {
     lastGamepadARef.current = gamepad.buttonA
     lastGamepadLeftRef.current = gamepad.left
     lastGamepadRightRef.current = gamepad.right
-  }, [gamepad, gameState, vehicles, loadingInventory])
+  }, [gamepad, gameState, vehicles, loadingInventory, spriteReady]) // startGame is stable, no need in deps
 
   // Fetch user's vehicle inventory
   useEffect(() => {
@@ -234,15 +199,10 @@ export default function StarFighterPage() {
   }
 
   const handleVehicleSelect = (bitmapString: string | null) => {
-    setSelectedVehicle(bitmapString)
-    // If no vehicle selected (default), sprite is ready immediately
-    if (!bitmapString) {
-      setSpriteReady(true)
-      setGameState('start')
-    } else {
-      // Wait for sprite to render
-      setSpriteReady(false)
-    }
+    // If no vehicle selected, use default spaceship bitmap
+    setSelectedVehicle(bitmapString || DEFAULT_SPACESHIP)
+    // Wait for sprite to render
+    setSpriteReady(false)
   }
 
   // Redirect if not authenticated
@@ -251,38 +211,6 @@ export default function StarFighterPage() {
       router.push('/')
     }
   }, [ready, authenticated, router])
-
-  // Keyboard controls
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      keysRef.current.add(e.key.toLowerCase())
-      
-      // Shoot on space
-      if (e.key === ' ' && gameState === 'playing') {
-        e.preventDefault()
-        shoot()
-      }
-      
-      // Pause on Escape
-      if (e.key === 'Escape' && gameState === 'playing') {
-        setGameState('paused')
-      } else if (e.key === 'Escape' && gameState === 'paused') {
-        setGameState('playing')
-      }
-    }
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      keysRef.current.delete(e.key.toLowerCase())
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    window.addEventListener('keyup', handleKeyUp)
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-      window.removeEventListener('keyup', handleKeyUp)
-    }
-  }, [gameState])
 
   const shoot = useCallback(() => {
     const now = Date.now()
@@ -356,12 +284,15 @@ export default function StarFighterPage() {
     if (animationIdRef.current) {
       cancelAnimationFrame(animationIdRef.current)
     }
-    
+  }, [])
+  
+  const resetToVehicleSelect = useCallback(() => {
+    resetGame()
     // Reset vehicle selection to allow choosing again
     setSelectedVehicle(null)
     setSpriteReady(false)
     setGameState('vehicleSelect')
-  }, [])
+  }, [resetGame])
 
   const drawGame = useCallback(() => {
     const canvas = canvasRef.current
@@ -384,19 +315,10 @@ export default function StarFighterPage() {
 
     // Draw player
     const player = playerRef.current
-    if (selectedVehicle && playerSpriteCanvasRef.current && spriteReady) {
-      // Draw selected vehicle sprite (only if ready)
+    if (playerSpriteCanvasRef.current && spriteReady) {
+      // Draw vehicle sprite (default or custom)
       ctx.drawImage(
         playerSpriteCanvasRef.current,
-        player.x,
-        player.y,
-        player.width,
-        player.height
-      )
-    } else if (defaultSpriteCanvasRef.current) {
-      // Draw default spaceship sprite
-      ctx.drawImage(
-        defaultSpriteCanvasRef.current,
         player.x,
         player.y,
         player.width,
@@ -456,11 +378,12 @@ export default function StarFighterPage() {
     const player = playerRef.current
 
     // Handle player movement (keyboard + gamepad)
+    // Allow ship center to reach screen edges (ship can be half off-screen)
     if (keysRef.current.has('arrowleft') || keysRef.current.has('a') || gamepadStateRef.current.left) {
-      player.x = Math.max(0, player.x - PLAYER_SPEED)
+      player.x = Math.max(-player.width / 2, player.x - PLAYER_SPEED)
     }
     if (keysRef.current.has('arrowright') || keysRef.current.has('d') || gamepadStateRef.current.right) {
-      player.x = Math.min(CANVAS_WIDTH - player.width, player.x + PLAYER_SPEED)
+      player.x = Math.min(CANVAS_WIDTH - player.width / 2, player.x + PLAYER_SPEED)
     }
 
     // Auto-shoot (keyboard + gamepad)
@@ -596,6 +519,44 @@ export default function StarFighterPage() {
     setGameState('playing')
   }, [resetGame])
 
+  // Keyboard controls
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      keysRef.current.add(e.key.toLowerCase())
+      
+      // Start game on space
+      if (e.key === ' ' && gameState === 'start' && spriteReady) {
+        e.preventDefault()
+        startGame()
+      }
+      
+      // Shoot on space
+      if (e.key === ' ' && gameState === 'playing') {
+        e.preventDefault()
+        shoot()
+      }
+      
+      // Pause on Escape
+      if (e.key === 'Escape' && gameState === 'playing') {
+        setGameState('paused')
+      } else if (e.key === 'Escape' && gameState === 'paused') {
+        setGameState('playing')
+      }
+    }
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      keysRef.current.delete(e.key.toLowerCase())
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [gameState, spriteReady, startGame, shoot])
+
   // Start/stop game loop
   useEffect(() => {
     if (gameState === 'playing') {
@@ -726,12 +687,6 @@ export default function StarFighterPage() {
               style={{ display: 'none' }}
             />
           )}
-          <canvas
-            ref={defaultSpriteCanvasRef}
-            width={64}
-            height={64}
-            style={{ display: 'none' }}
-          />
 
           {/* Canvas */}
           <div className="relative">
@@ -749,15 +704,6 @@ export default function StarFighterPage() {
                   <h2 className="text-4xl font-bold mb-6">🚀 Choose Your Vehicle</h2>
                   
                   {/* Controller indicator */}
-                  {gamepad.connected && (
-                    <div className="mb-4">
-                      <p className="text-green-400 font-semibold mb-2">🎮 Controller Connected</p>
-                      <p className="text-sm text-gray-400">Use ← → to navigate • Press A or Start to select</p>
-                      <div className="mt-2 text-xs bg-gray-800 inline-block p-2 rounded font-mono">
-                        <div>L:{gamepad.left ? '✓' : '·'} R:{gamepad.right ? '✓' : '·'} A:{gamepad.buttonA ? '✓' : '·'} Start:{gamepad.start ? '✓' : '·'}</div>
-                      </div>
-                    </div>
-                  )}
                   
                   {loadingInventory ? (
                     <p className="text-xl">Loading vehicles...</p>
@@ -847,14 +793,14 @@ export default function StarFighterPage() {
               <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 rounded-lg">
                 <div className="text-center text-white">
                   <h2 className="text-4xl font-bold mb-4">🚀 Star Fighter</h2>
-                  <p className="mb-2">← → or A/D to move</p>
-                  <p className="mb-2">SPACE to shoot</p>
+                  <p className="mb-2">← → or A/D to move • Controller supported</p>
+                  <p className="mb-2">SPACE or A button to shoot</p>
                   <p className="mb-6">Destroy asteroids before they pass!</p>
                   <button
                     onClick={startGame}
                     className="btn-primary text-lg px-8 py-3"
                   >
-                    Start Game
+                    Press SPACE or A to Start
                   </button>
                 </div>
               </div>
@@ -885,7 +831,7 @@ export default function StarFighterPage() {
                   )}
                   <div className="flex flex-col gap-3 mt-6">
                     <button
-                      onClick={resetGame}
+                      onClick={resetToVehicleSelect}
                       className="btn-primary text-lg px-8 py-3"
                     >
                       Play Again
@@ -919,15 +865,6 @@ export default function StarFighterPage() {
           {/* Controls info */}
           <div className="text-sm text-gray-600 text-center">
             <p><kbd className="kbd">←</kbd> <kbd className="kbd">→</kbd> or <kbd className="kbd">A</kbd> <kbd className="kbd">D</kbd> to move • <kbd className="kbd">SPACE</kbd> to shoot • <kbd className="kbd">ESC</kbd> to pause</p>
-            {gamepad.connected && (
-              <div className="mt-2">
-                <p className="text-green-600 font-semibold">🎮 Controller Connected</p>
-                <div className="mt-2 text-xs bg-gray-100 p-2 rounded font-mono">
-                  <div>L:{gamepad.left ? '✓' : '·'} R:{gamepad.right ? '✓' : '·'} U:{gamepad.up ? '✓' : '·'} D:{gamepad.down ? '✓' : '·'}</div>
-                  <div>A:{gamepad.buttonA ? '✓' : '·'} B:{gamepad.buttonB ? '✓' : '·'} Start:{gamepad.start ? '✓' : '·'}</div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
