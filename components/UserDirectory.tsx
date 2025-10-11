@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Avatar from './Avatar'
 
 interface PublicUser {
   username: string
@@ -76,20 +77,11 @@ export default function UserDirectory() {
                      text-left group"
           >
             {/* Avatar */}
-            {user.avatar_url ? (
-              <img
-                src={user.avatar_url}
-                alt={user.username}
-                className="w-12 h-12 rounded-full object-cover border-2 border-gray-200 
-                         group-hover:border-primary-300 transition-colors"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center 
-                           text-lg font-bold text-primary-600 border-2 border-gray-200
-                           group-hover:border-primary-300 group-hover:bg-primary-200 transition-colors">
-                {user.username[0].toUpperCase()}
-              </div>
-            )}
+            <Avatar 
+              avatarUrl={user.avatar_url}
+              username={user.username}
+              size="md"
+            />
 
             {/* Info */}
             <div className="flex-1 min-w-0">

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
+import { useRouter } from 'next/navigation'
+import Avatar from './Avatar'
 
 interface ProfileEditorProps {
   profile: {
@@ -13,6 +15,7 @@ interface ProfileEditorProps {
 
 export default function ProfileEditor({ profile, onProfileUpdate }: ProfileEditorProps) {
   const { user } = usePrivy()
+  const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [username, setUsername] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
@@ -141,17 +144,11 @@ export default function ProfileEditor({ profile, onProfileUpdate }: ProfileEdito
         <div className="flex items-center gap-4">
           {/* Avatar */}
           <div className="flex-shrink-0">
-            {profile?.avatar_url ? (
-              <img
-                src={profile.avatar_url}
-                alt="Profile"
-                className="w-16 h-16 rounded-full object-cover border-2 border-primary-200"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-2xl font-bold text-primary-600">
-                {profile?.username?.[0]?.toUpperCase() || user?.email?.address?.[0]?.toUpperCase() || '?'}
-              </div>
-            )}
+            <Avatar 
+              avatarUrl={profile?.avatar_url || null}
+              username={profile?.username || user?.email?.address || 'User'}
+              size="md"
+            />
           </div>
 
           {/* Info */}
@@ -169,13 +166,28 @@ export default function ProfileEditor({ profile, onProfileUpdate }: ProfileEdito
             )}
           </div>
 
-          {/* Edit Button */}
-          <button
-            onClick={() => setIsEditing(true)}
-            className="btn-secondary text-sm px-4 py-2"
-          >
-            {profile?.username ? 'Edit' : 'Add Username'}
-          </button>
+          {/* Buttons */}
+          <div className="flex gap-2">
+            {profile?.username && (
+              <button
+                onClick={() => router.push(`/users/${profile.username}`)}
+                className="btn-secondary text-sm px-4 py-2 flex items-center gap-2"
+              >
+                <Avatar 
+                  avatarUrl={profile.avatar_url}
+                  username={profile.username}
+                  size="sm"
+                />
+                Inventory
+              </button>
+            )}
+            <button
+              onClick={() => setIsEditing(true)}
+              className="btn-secondary text-sm px-4 py-2"
+            >
+              {profile?.username ? 'Edit' : 'Add Username'}
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -186,30 +198,28 @@ export default function ProfileEditor({ profile, onProfileUpdate }: ProfileEdito
       <h3 className="text-lg font-bold text-gray-900 mb-4">Edit Profile</h3>
 
       <div className="space-y-4">
-        {/* Avatar URL */}
+        {/* Avatar URL or Bitmap */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Profile Picture URL
+            Profile Picture
           </label>
-          <input
-            type="url"
+          <textarea
             value={avatarUrl}
             onChange={(e) => setAvatarUrl(e.target.value)}
-            placeholder="https://example.com/avatar.jpg"
-            className="input-field"
+            placeholder="Enter a URL (https://...) or paste a bitmap string (hex)"
+            className="input-field font-mono text-sm"
+            rows={3}
           />
           <p className="mt-1 text-xs text-gray-500">
-            Enter a URL to an image (e.g., from Imgur, GitHub, etc.)
+            Enter a URL to an image OR paste a bitmap string from your inventory
           </p>
-          {avatarUrl && (
-            <div className="mt-2">
-              <img
-                src={avatarUrl}
-                alt="Preview"
-                className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none'
-                }}
+          {avatarUrl && profile?.username && (
+            <div className="mt-3">
+              <p className="text-xs text-gray-600 mb-2">Preview:</p>
+              <Avatar 
+                avatarUrl={avatarUrl}
+                username={profile.username}
+                size="lg"
               />
             </div>
           )}

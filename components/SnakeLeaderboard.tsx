@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import Avatar from './Avatar'
 
 interface LeaderboardEntry {
   username: string
@@ -153,17 +154,11 @@ export default function SnakeLeaderboard() {
                     {/* Player */}
                     <td className="p-3">
                       <div className="flex items-center gap-2">
-                        {entry.avatar_url ? (
-                          <img
-                            src={entry.avatar_url}
-                            alt={entry.username}
-                            className="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-xs font-bold text-primary-600 border-2 border-gray-200">
-                            {entry.username[0].toUpperCase()}
-                          </div>
-                        )}
+                        <Avatar 
+                          avatarUrl={entry.avatar_url}
+                          username={entry.username}
+                          size="sm"
+                        />
                         <span className="font-medium text-gray-900">{entry.username}</span>
                       </div>
                     </td>

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getOrCreateUser, getUserById, updateUserProfile, isUsernameAvailable } from '@/lib/db'
 
-// Force dynamic rendering for this API route
+// Force dynamic rendering and disable all caching
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const fetchCache = 'force-no-store'
 
 // Helper to get user ID from Privy token
 // In production, you'd verify the JWT token here

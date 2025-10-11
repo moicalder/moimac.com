@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { usePrivy } from '@privy-io/react-auth'
 import InventoryManager from '../../../components/InventoryManager'
+import Avatar from '../../../components/Avatar'
 
 interface PublicUser {
   username: string
@@ -25,6 +26,7 @@ export default function UserProfilePage() {
   const [currentUserProfile, setCurrentUserProfile] = useState<CurrentUserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const username = params.username as string
 
@@ -33,12 +35,19 @@ export default function UserProfilePage() {
     if (authenticated && currentUser?.id) {
       fetchCurrentUserProfile()
     }
-  }, [username, authenticated, currentUser?.id])
+  }, [username, authenticated, currentUser?.id, refreshKey])
 
   const fetchUserProfile = async () => {
     try {
-      const response = await fetch(`/api/users/${username}`, {
+      const timestamp = Date.now()
+      const randomBuster = Math.random().toString(36)
+      const response = await fetch(`/api/users/${username}?_t=${timestamp}&_r=${randomBuster}&_k=${refreshKey}`, {
         cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       })
       if (response.ok) {
         const data = await response.json()
@@ -61,6 +70,8 @@ export default function UserProfilePage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
         },
         body: JSON.stringify({
           userId: currentUser.id,
@@ -82,6 +93,11 @@ export default function UserProfilePage() {
                        currentUserProfile?.username && 
                        user?.username &&
                        currentUserProfile.username.toLowerCase() === user.username.toLowerCase()
+
+  // Memoize the refresh callback
+  const handleProfileUpdate = useCallback(() => {
+    setRefreshKey(prev => prev + 1)
+  }, [refreshKey])
 
   if (loading) {
     return (
@@ -140,75 +156,36 @@ export default function UserProfilePage() {
           ← Back to Home
         </button>
 
-        {/* Profile Header */}
-        <div className="card mb-6">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            {/* Avatar */}
-            {user.avatar_url ? (
-              <img
-                src={user.avatar_url}
-                alt={user.username}
-                className="w-24 h-24 rounded-full object-cover border-4 border-primary-200"
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-full bg-primary-100 flex items-center justify-center 
-                           text-4xl font-bold text-primary-600 border-4 border-primary-200">
-                {user.username[0].toUpperCase()}
-              </div>
-            )}
-
-            {/* Info */}
-            <div className="flex-1 text-center sm:text-left">
-              <h1 className="text-3xl font-bold text-gray-900 mb-1">
-                {user.username}
-              </h1>
-              {isOwnProfile && (
-                <div className="inline-block px-3 py-1 bg-primary-100 text-primary-700 
-                             rounded-full text-sm font-medium mb-2">
-                  This is you!
-                </div>
-              )}
-              <p className="text-gray-600">
-                Joined {joinDate}
-              </p>
-            </div>
+        {/* Page Header */}
+        <div className="mb-6 flex items-center gap-4">
+          <Avatar 
+            key={`avatar-${user.avatar_url}`}
+            avatarUrl={user.avatar_url} 
+            username={user.username}
+            size="md"
+          />
+          
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-1">
+              {user.username}'s Inventory
+            </h1>
+            <p className="text-gray-600">
+              {isOwnProfile 
+                ? 'Manage your characters and vehicles' 
+                : `View ${user.username}'s collection`}
+            </p>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="card mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">📊 Stats</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-primary-50 p-6 rounded-lg text-center">
-              <div className="text-sm text-primary-600 font-medium mb-1">Games Played</div>
-              <div className="text-3xl font-bold text-primary-700">
-                {user.total_games_played}
-              </div>
-            </div>
-            <div className="bg-purple-50 p-6 rounded-lg text-center">
-              <div className="text-sm text-purple-600 font-medium mb-1">Total Score</div>
-              <div className="text-3xl font-bold text-purple-700">
-                {user.total_score.toLocaleString()}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Inventory Manager - Only show for own profile */}
-        {isOwnProfile && (
-          <div className="mb-6">
-            <InventoryManager />
+        {/* Inventory Manager */}
+        {isOwnProfile ? (
+          <InventoryManager onProfileUpdate={handleProfileUpdate} />
+        ) : (
+          <div className="card text-center py-12 text-gray-500">
+            <div className="text-4xl mb-2">🔒</div>
+            <p>This user's inventory is private</p>
           </div>
         )}
-
-        {/* Placeholder for future content */}
-        <div className="card">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">🏆 Recent Activity</h2>
-          <div className="text-center py-12 text-gray-500">
-            <div className="text-4xl mb-2">🎮</div>
-            <p>Game history coming soon!</p>
-          </div>
-        </div>
       </div>
     </main>
   )

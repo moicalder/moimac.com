@@ -13,9 +13,9 @@ interface SpriteRendererProps {
 
 export default function SpriteRenderer({ 
   bitmapString, 
-  width = 16, 
-  height = 16, 
-  pixelSize = 4,
+  width = 64, 
+  height = 64, 
+  pixelSize = 2,
   className = ''
 }: SpriteRendererProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)

@@ -11,19 +11,51 @@ interface InventoryItem {
   created_at: string
 }
 
-export default function InventoryManager() {
+interface InventoryManagerProps {
+  onProfileUpdate?: () => void
+}
+
+export default function InventoryManager({ onProfileUpdate }: InventoryManagerProps) {
   const { user } = usePrivy()
   const [items, setItems] = useState<InventoryItem[]>([])
   const [loading, setLoading] = useState(false)
   const [bitmapInput, setBitmapInput] = useState('')
   const [selectedType, setSelectedType] = useState<'character' | 'vehicle'>('character')
   const [showAddForm, setShowAddForm] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (user?.id) {
       fetchInventory()
+      fetchCurrentAvatar()
     }
   }, [user?.id])
+
+  const fetchCurrentAvatar = async () => {
+    if (!user?.id) return
+    
+    try {
+      const response = await fetch('/api/user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          email: user.email?.address || `user-${user.id}@example.com`,
+        }),
+        cache: 'no-store',
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setCurrentAvatarUrl(data.profile?.avatar_url)
+      }
+    } catch (error) {
+      console.error('Error fetching current avatar:', error)
+    }
+  }
 
   const fetchInventory = async () => {
     if (!user?.id) return
@@ -78,6 +110,45 @@ export default function InventoryManager() {
     }
   }
 
+  const handleSetAsProfilePic = async (bitmapString: string) => {
+    if (!user?.id) return
+
+    try {
+      setLoading(true)
+      
+      // Update profile with bitmap string directly
+      const response = await fetch('/api/user', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.id,
+        },
+        body: JSON.stringify({
+          avatar_url: bitmapString
+        })
+      })
+
+      if (response.ok) {
+        // Update current avatar
+        setCurrentAvatarUrl(bitmapString)
+        
+        // Trigger parent to refresh user data
+        if (onProfileUpdate) {
+          onProfileUpdate()
+        }
+        alert('Profile picture updated!')
+      } else {
+        const error = await response.json()
+        alert(`Error: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Error setting profile pic:', error)
+      alert('Failed to set profile picture')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleDelete = async (itemId: number) => {
     if (!user?.id) return
     
@@ -116,7 +187,7 @@ export default function InventoryManager() {
     <div className="card">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-gray-900">
-          🎨 Character & Vehicle Inventory
+          Character & Vehicle Inventory
         </h2>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
@@ -171,14 +242,14 @@ export default function InventoryManager() {
             {bitmapInput.trim() && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Preview (16x16)
+                  Preview (64x64)
                 </label>
                 <div className="p-4 bg-white rounded-lg border-2 border-gray-300 inline-block">
                   <SpriteRenderer 
                     bitmapString={bitmapInput.trim()} 
-                    width={16}
-                    height={16}
-                    pixelSize={8}
+                    width={64}
+                    height={64}
+                    pixelSize={3}
                   />
                 </div>
               </div>
@@ -218,45 +289,134 @@ export default function InventoryManager() {
           <p className="text-sm">Click "Add New" to add your first character or vehicle!</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="relative group bg-white rounded-lg border-2 border-gray-200 
-                       hover:border-primary-400 transition-colors p-3"
-            >
-              {/* Sprite Preview */}
-              <div className="flex items-center justify-center mb-2 bg-gray-50 rounded p-2">
-                <SpriteRenderer 
-                  bitmapString={item.bitmap_string}
-                  width={16}
-                  height={16}
-                  pixelSize={6}
-                />
-              </div>
-
-              {/* Type Badge */}
-              <div className="text-center mb-2">
-                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                  item.type === 'character' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'bg-green-100 text-green-700'
-                }`}>
-                  {item.type === 'character' ? '🧑 Character' : '🚗 Vehicle'}
-                </span>
-              </div>
-
-              {/* Delete Button */}
-              <button
-                onClick={() => handleDelete(item.id)}
-                disabled={loading}
-                className="w-full text-xs py-1 px-2 bg-red-50 text-red-600 rounded 
-                         hover:bg-red-100 transition-colors disabled:opacity-50"
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          {items.map((item) => {
+            const isCurrentAvatar = currentAvatarUrl === item.bitmap_string
+            
+            return (
+              <div 
+                key={item.id}
+                className="relative group bg-white rounded-lg border-2 border-gray-200 
+                         hover:border-primary-400 transition-colors p-4 cursor-pointer flex flex-col items-center"
+                style={{ minWidth: '160px' }}
+                onClick={() => setSelectedItem(item)}
               >
-                Delete
+                {/* Sprite Preview */}
+                <div className="mb-3 rounded overflow-hidden flex items-center justify-center"
+                     style={{ 
+                       width: '128px',
+                       height: '128px',
+                       background: 'repeating-conic-gradient(#f0f0f0 0% 25%, #ffffff 0% 50%) 50% / 8px 8px',
+                     }}>
+                  <SpriteRenderer 
+                    bitmapString={item.bitmap_string}
+                    width={64}
+                    height={64}
+                    pixelSize={2}
+                    className="block"
+                  />
+                </div>
+
+                {/* Type Badge */}
+                <div className="text-center mb-3 w-full">
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                    item.type === 'character' 
+                      ? 'bg-blue-100 text-blue-700' 
+                      : 'bg-green-100 text-green-700'
+                  }`}>
+                    {item.type === 'character' ? '🧑 Character' : '🚗 Vehicle'}
+                  </span>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="space-y-2 w-full">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleSetAsProfilePic(item.bitmap_string)
+                    }}
+                    disabled={loading || isCurrentAvatar}
+                    className={`w-full text-xs py-2 px-3 rounded transition-colors disabled:opacity-50 font-medium ${
+                      isCurrentAvatar
+                        ? 'bg-green-50 text-green-700 cursor-default'
+                        : 'bg-primary-50 text-primary-600 hover:bg-primary-100'
+                    }`}
+                  >
+                    {isCurrentAvatar ? '✓ Current Profile Pic' : 'Set as Profile Pic'}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDelete(item.id)
+                    }}
+                    disabled={loading}
+                    className="w-full text-xs py-2 px-3 bg-red-50 text-red-600 rounded 
+                             hover:bg-red-100 transition-colors disabled:opacity-50"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Enlarged Preview Modal */}
+      {selectedItem && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedItem(null)}
+        >
+          <div 
+            className="bg-white rounded-lg p-6 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">
+                {selectedItem.type === 'character' ? '🧑 Character' : '🚗 Vehicle'}
+              </h3>
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
               </button>
             </div>
-          ))}
+            
+            <div className="flex items-center justify-center mb-4 bg-gray-50 rounded-lg p-8"
+                 style={{ imageRendering: 'pixelated' }}>
+              <SpriteRenderer 
+                bitmapString={selectedItem.bitmap_string}
+                width={64}
+                height={64}
+                pixelSize={4}
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  handleSetAsProfilePic(selectedItem.bitmap_string)
+                  setSelectedItem(null)
+                }}
+                disabled={loading || currentAvatarUrl === selectedItem.bitmap_string}
+                className={`flex-1 py-2 px-4 rounded font-medium transition-colors ${
+                  currentAvatarUrl === selectedItem.bitmap_string
+                    ? 'bg-green-50 text-green-700 cursor-default'
+                    : 'bg-primary-600 text-white hover:bg-primary-700'
+                }`}
+              >
+                {currentAvatarUrl === selectedItem.bitmap_string ? '✓ Current Profile Pic' : 'Set as Profile Pic'}
+              </button>
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
