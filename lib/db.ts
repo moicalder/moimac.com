@@ -97,7 +97,7 @@ export async function getOrCreateUser(userId: string, email: string): Promise<Us
  */
 export async function updateUserProfile(
   userId: string,
-  updates: { username?: string; avatar_url?: string; wallet_address?: string }
+  updates: { username?: string; avatar_url?: string; wallet_address?: string; background_color?: string }
 ): Promise<UserProfile | null> {
   try {
     const setClauses: string[] = []
@@ -116,6 +116,11 @@ export async function updateUserProfile(
     if (updates.wallet_address !== undefined) {
       setClauses.push(`wallet_address = $${values.length + 1}`)
       values.push(updates.wallet_address)
+    }
+
+    if (updates.background_color !== undefined) {
+      setClauses.push(`background_color = $${values.length + 1}`)
+      values.push(updates.background_color)
     }
 
     if (setClauses.length === 0) {

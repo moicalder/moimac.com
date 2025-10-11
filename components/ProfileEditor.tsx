@@ -9,25 +9,42 @@ interface ProfileEditorProps {
   profile: {
     username: string | null
     avatar_url: string | null
+    background_color?: string | null
   } | null
   onProfileUpdate: () => void
+  onBackgroundColorChange?: (color: string) => void
 }
 
-export default function ProfileEditor({ profile, onProfileUpdate }: ProfileEditorProps) {
+export default function ProfileEditor({ profile, onProfileUpdate, onBackgroundColorChange }: ProfileEditorProps) {
   const { user } = usePrivy()
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [username, setUsername] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
+  const [backgroundColor, setBackgroundColor] = useState('white')
   const [checking, setChecking] = useState(false)
   const [available, setAvailable] = useState<boolean | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
+  const backgroundColors = [
+    { value: 'white', label: 'White', class: 'from-gray-50 via-white to-blue-50' },
+    { value: 'black', label: 'Black', class: 'from-gray-900 via-black to-gray-900' },
+    { value: 'brown', label: 'Brown', class: 'from-amber-900 via-amber-950 to-amber-900' },
+    { value: 'grey', label: 'Grey', class: 'from-gray-400 via-gray-500 to-gray-400' },
+    { value: 'red', label: 'Red', class: 'from-red-300 via-red-400 to-red-300' },
+    { value: 'orange', label: 'Orange', class: 'from-orange-300 via-orange-400 to-orange-300' },
+    { value: 'yellow', label: 'Yellow', class: 'from-yellow-200 via-yellow-300 to-yellow-200' },
+    { value: 'green', label: 'Green', class: 'from-green-300 via-green-400 to-green-300' },
+    { value: 'blue', label: 'Blue', class: 'from-blue-300 via-blue-400 to-blue-300' },
+    { value: 'purple', label: 'Purple', class: 'from-purple-300 via-purple-400 to-purple-300' },
+  ]
+
   useEffect(() => {
     if (profile) {
       setUsername(profile.username || '')
       setAvatarUrl(profile.avatar_url || '')
+      setBackgroundColor(profile.background_color || 'white')
     }
   }, [profile])
 
@@ -112,6 +129,7 @@ export default function ProfileEditor({ profile, onProfileUpdate }: ProfileEdito
         body: JSON.stringify({
           username: username || null,
           avatar_url: avatarUrl || null,
+          background_color: backgroundColor,
         }),
         cache: 'no-store',
       })
@@ -225,6 +243,43 @@ export default function ProfileEditor({ profile, onProfileUpdate }: ProfileEdito
           )}
         </div>
 
+        {/* Background Color */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Background Color
+          </label>
+          <div className="grid grid-cols-5 gap-2">
+            {backgroundColors.map((color) => (
+              <button
+                key={color.value}
+                type="button"
+                onClick={() => {
+                  setBackgroundColor(color.value)
+                  onBackgroundColorChange?.(color.value)
+                }}
+                className={`relative h-16 rounded-lg border-2 transition-all ${
+                  backgroundColor === color.value 
+                    ? 'border-blue-500 ring-2 ring-blue-300' 
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                <div className={`w-full h-full rounded-md bg-gradient-to-br ${color.class}`}></div>
+                {backgroundColor === color.value && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-2xl">✓</span>
+                  </div>
+                )}
+                <p className="absolute bottom-1 left-0 right-0 text-center text-xs font-medium text-gray-700 bg-white/80 rounded mx-1">
+                  {color.label}
+                </p>
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-gray-500">
+            This will change the background color across all pages
+          </p>
+        </div>
+
         {/* Username */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -280,7 +335,9 @@ export default function ProfileEditor({ profile, onProfileUpdate }: ProfileEdito
               saving ||
               checking ||
               (username !== profile?.username && !available) ||
-              (username === profile?.username && avatarUrl === profile?.avatar_url)
+              (username === profile?.username && 
+               avatarUrl === profile?.avatar_url && 
+               backgroundColor === (profile?.background_color || 'white'))
             }
             className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
           >

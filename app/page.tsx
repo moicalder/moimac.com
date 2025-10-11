@@ -8,10 +8,12 @@ import MathModeLeaderboard from '@/components/MathModeLeaderboard'
 import SnakeLeaderboard from '@/components/SnakeLeaderboard'
 import TypeMasterLeaderboard from '@/components/TypeMasterLeaderboard'
 import StarFighterLeaderboard from '@/components/StarFighterLeaderboard'
+import { getBackgroundClass } from '@/lib/background-colors'
 
 interface UserProfile {
   username: string | null
   avatar_url: string | null
+  background_color?: string | null
   total_games_played: number
   total_score: number
 }
@@ -20,6 +22,7 @@ export default function Home() {
   const { ready, authenticated, user, login, logout } = usePrivy()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(false)
+  const [previewBackgroundColor, setPreviewBackgroundColor] = useState<string | null>(null)
 
   // Fetch or create user profile when authenticated
   useEffect(() => {
@@ -150,7 +153,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen p-4 md:p-8">
+    <main className={`min-h-screen p-4 md:p-8 bg-gradient-to-br ${getBackgroundClass(previewBackgroundColor || profile?.background_color)}`}>
       <div className="max-w-6xl mx-auto">
         {/* Header with Sign Out */}
         <div className="flex items-center justify-between mb-6">
@@ -166,7 +169,11 @@ export default function Home() {
         <div className="mb-6">
           <ProfileEditor 
             profile={profile} 
-            onProfileUpdate={initializeUser}
+            onProfileUpdate={() => {
+              setPreviewBackgroundColor(null) // Reset preview after save
+              initializeUser()
+            }}
+            onBackgroundColorChange={setPreviewBackgroundColor}
           />
         </div>
 

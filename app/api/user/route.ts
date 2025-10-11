@@ -105,9 +105,9 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { username, avatar_url, wallet_address } = body
+    const { username, avatar_url, wallet_address, background_color } = body
 
-    console.log('PATCH /api/user - userId:', userId, 'updates:', { username, avatar_url, wallet_address })
+    console.log('PATCH /api/user - userId:', userId, 'updates:', { username, avatar_url, wallet_address, background_color })
 
     // If updating username, check if it's available
     if (username) {
@@ -132,6 +132,7 @@ export async function PATCH(request: NextRequest) {
       username,
       avatar_url,
       wallet_address,
+      background_color,
     })
     
     if (!profile) {
