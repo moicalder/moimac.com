@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
+import { useGamepad } from '@/hooks/useGamepad'
 
 type GameState = 'start' | 'playing' | 'paused' | 'gameOver'
 
@@ -14,6 +15,7 @@ interface Position {
 export default function SnakePage() {
   const router = useRouter()
   const { ready, authenticated, user } = usePrivy()
+  const gamepad = useGamepad()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [gameState, setGameState] = useState<GameState>('start')
   const [score, setScore] = useState(0)
@@ -31,6 +33,8 @@ export default function SnakePage() {
   const gameSpeedRef = useRef(150)
   const lastTimeRef = useRef(0)
   const animationIdRef = useRef<number>()
+  const gamepadStateRef = useRef(gamepad)
+  const lastGamepadStartRef = useRef(false)
 
   const GRID_SIZE = 20
   const TILE_COUNT = 20 // 400x400 canvas / 20 grid
@@ -44,6 +48,45 @@ export default function SnakePage() {
     const saved = localStorage.getItem('snakeHighScore')
     if (saved) setHighScore(parseInt(saved))
   }, [])
+
+  // Update gamepad state ref and handle input
+  useEffect(() => {
+    const prevGamepad = gamepadStateRef.current
+    gamepadStateRef.current = gamepad
+    
+    // Handle Start button for pause (detect button press, not hold)
+    if (gamepad.start && !lastGamepadStartRef.current) {
+      if (gameState === 'playing') {
+        setGameState('paused')
+      } else if (gameState === 'paused') {
+        setGameState('playing')
+      }
+    }
+    lastGamepadStartRef.current = gamepad.start
+    
+    // Handle gamepad direction changes (only when state changes from false to true)
+    if (gameState === 'playing') {
+      const lastDir = directionQueueRef.current.length > 0 
+        ? directionQueueRef.current[directionQueueRef.current.length - 1]
+        : directionRef.current
+      
+      let newDir: { dx: number, dy: number } | null = null
+      
+      if (gamepad.up && !prevGamepad.up && lastDir.dy !== 1) {
+        newDir = { dx: 0, dy: -1 }
+      } else if (gamepad.down && !prevGamepad.down && lastDir.dy !== -1) {
+        newDir = { dx: 0, dy: 1 }
+      } else if (gamepad.left && !prevGamepad.left && lastDir.dx !== 1) {
+        newDir = { dx: -1, dy: 0 }
+      } else if (gamepad.right && !prevGamepad.right && lastDir.dx !== -1) {
+        newDir = { dx: 1, dy: 0 }
+      }
+      
+      if (newDir && (newDir.dx !== lastDir.dx || newDir.dy !== lastDir.dy)) {
+        directionQueueRef.current.push(newDir)
+      }
+    }
+  }, [gamepad, gameState])
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -493,6 +536,11 @@ export default function SnakePage() {
               Use <strong>Arrow Keys</strong> or <strong>WASD</strong> to move • 
               Press <strong>Space</strong> to pause
             </p>
+            {gamepad.connected && (
+              <p className="text-center text-sm text-green-600 font-semibold mt-2">
+                🎮 Controller Connected
+              </p>
+            )}
             {rainbowOrbActiveRef.current && (
               <p className="text-center text-sm text-purple-600 font-bold mt-2">
                 🌈 Rainbow Mode Active! Walk through walls!

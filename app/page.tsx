@@ -7,6 +7,7 @@ import UserDirectory from '@/components/UserDirectory'
 import MathModeLeaderboard from '@/components/MathModeLeaderboard'
 import SnakeLeaderboard from '@/components/SnakeLeaderboard'
 import TypeMasterLeaderboard from '@/components/TypeMasterLeaderboard'
+import StarFighterLeaderboard from '@/components/StarFighterLeaderboard'
 
 interface UserProfile {
   username: string | null
@@ -92,6 +93,13 @@ export default function Home() {
         name: 'TypeMaster',
         description: 'Learn to type like a pro with proper finger placement',
         icon: '⌨️',
+        status: 'available',
+      },
+      {
+        id: 'starfighter',
+        name: 'Star Fighter',
+        description: 'Galaga-style space shooter - destroy asteroids and survive!',
+        icon: '🚀',
         status: 'available',
       },
     ]
@@ -227,6 +235,11 @@ export default function Home() {
         {/* TypeMaster Leaderboard */}
         <div className="mt-12">
           <TypeMasterLeaderboard />
+        </div>
+
+        {/* Star Fighter Leaderboard */}
+        <div id="starfighter-leaderboard" className="mt-12">
+          <StarFighterLeaderboard />
         </div>
 
         {/* User Directory */}
