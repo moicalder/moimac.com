@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
+import { fileToBitmap, imageToBitmap } from '@/lib/image-to-bitmap'
 import SpriteRenderer from './SpriteRenderer'
 
 interface InventoryItem {
@@ -20,7 +21,11 @@ export default function InventoryManager({ onProfileUpdate }: InventoryManagerPr
   const [items, setItems] = useState<InventoryItem[]>([])
   const [loading, setLoading] = useState(false)
   const [bitmapInput, setBitmapInput] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
+  const [formError, setFormError] = useState('')
+  const [converting, setConverting] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | null>(null)
 
@@ -76,6 +81,57 @@ export default function InventoryManager({ onProfileUpdate }: InventoryManagerPr
     }
   }
 
+  const resetAddForm = () => {
+    setBitmapInput('')
+    setImageUrl('')
+    setFormError('')
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const usePicture = async (load: () => Promise<string>) => {
+    try {
+      setConverting(true)
+      setFormError('')
+      setBitmapInput(await load())
+    } catch (error) {
+      setBitmapInput('')
+      setFormError(error instanceof Error ? error.message : 'Could not use that picture.')
+    } finally {
+      setConverting(false)
+    }
+  }
+
+  const handleFile = (file: File | undefined) => {
+    if (!file) return
+    usePicture(() => fileToBitmap(file))
+  }
+
+  const handleUrl = () => {
+    const url = imageUrl.trim()
+    if (!url) {
+      setFormError('Paste a picture link first.')
+      return
+    }
+    usePicture(async () => {
+      const response = await fetch('/api/image-fetch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || 'Could not open that link.')
+      }
+      const blob = await response.blob()
+      const src = URL.createObjectURL(blob)
+      try {
+        return await imageToBitmap(src)
+      } finally {
+        URL.revokeObjectURL(src)
+      }
+    })
+  }
+
   const handleAdd = async () => {
     if (!user?.id || !bitmapInput.trim()) return
 
@@ -95,7 +151,7 @@ export default function InventoryManager({ onProfileUpdate }: InventoryManagerPr
 
       if (response.ok) {
         await fetchInventory()
-        setBitmapInput('')
+        resetAddForm()
         setShowAddForm(false)
       } else {
         const error = await response.json()
@@ -203,33 +259,58 @@ export default function InventoryManager({ onProfileUpdate }: InventoryManagerPr
           <h3 className="font-semibold text-gray-900 mb-3">Add New Item</h3>
           
           <div className="space-y-4">
-            {/* Bitmap Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Bitmap String (hex color indices)
+                Picture from your computer
               </label>
-              <textarea
-                value={bitmapInput}
-                onChange={(e) => setBitmapInput(e.target.value)}
-                placeholder="Enter hex string (e.g., 000102030405...)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 
-                         focus:ring-primary-500 focus:border-primary-500 font-mono text-sm"
-                rows={4}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/gif,image/webp"
+                onChange={(event) => handleFile(event.target.files?.[0])}
+                className="block w-full text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-primary-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary-700"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Each byte (2 hex digits) represents a color index from 0-255
-              </p>
             </div>
 
-            {/* Preview */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Or a link to a picture
+              </label>
+              <div className="flex gap-2">
+                <input
+                  value={imageUrl}
+                  onChange={(event) => setImageUrl(event.target.value)}
+                  placeholder="https://..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleUrl}
+                  disabled={loading || converting || !imageUrl.trim()}
+                  className="btn-secondary"
+                >
+                  Load
+                </button>
+              </div>
+            </div>
+
+            {formError && (
+              <p className="text-sm text-red-600">{formError}</p>
+            )}
+
             {bitmapInput.trim() && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Preview (64x64)
+                  This is how it will look
                 </label>
-                <div className="p-4 bg-white rounded-lg border-2 border-gray-300 inline-block">
-                  <SpriteRenderer 
-                    bitmapString={bitmapInput.trim()} 
+                <div
+                  className="p-4 bg-white rounded-lg border-2 border-gray-300 inline-block"
+                  style={{
+                    background: 'repeating-conic-gradient(#f0f0f0 0% 25%, #ffffff 0% 50%) 50% / 8px 8px',
+                  }}
+                >
+                  <SpriteRenderer
+                    bitmapString={bitmapInput.trim()}
                     width={64}
                     height={64}
                     pixelSize={3}
@@ -238,18 +319,17 @@ export default function InventoryManager({ onProfileUpdate }: InventoryManagerPr
               </div>
             )}
 
-            {/* Action Buttons */}
             <div className="flex gap-2">
               <button
                 onClick={handleAdd}
-                disabled={!bitmapInput.trim() || loading}
+                disabled={!bitmapInput.trim() || loading || converting}
                 className="btn-primary flex-1"
               >
-                {loading ? 'Saving...' : 'Save to Inventory'}
+                {loading || converting ? 'Working...' : 'Save to Inventory'}
               </button>
               <button
                 onClick={() => {
-                  setBitmapInput('')
+                  resetAddForm()
                   setShowAddForm(false)
                 }}
                 className="btn-secondary"
@@ -269,7 +349,7 @@ export default function InventoryManager({ onProfileUpdate }: InventoryManagerPr
       ) : items.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <p className="mb-2">No items in your inventory yet.</p>
-          <p className="text-sm">Play Paint, or click "Add New" to add something yourself.</p>
+          <p className="text-sm">Play Paint, or click Add New to upload a picture.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">

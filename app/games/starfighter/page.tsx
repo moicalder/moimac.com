@@ -5,6 +5,7 @@ import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
 import SpriteRenderer from '@/components/SpriteRenderer'
 import { useGamepad } from '@/hooks/useGamepad'
+import { drawAsteroid } from '@/lib/asteroid'
 type GameState = 'vehicleSelect' | 'start' | 'playing' | 'paused' | 'gameOver'
 
 interface InventoryItem {
@@ -25,6 +26,7 @@ interface Particle {
   health: number
   maxHealth: number
   speed: number
+  seed: number
 }
 
 interface Bullet {
@@ -256,7 +258,8 @@ export default function StarFighterPage() {
       size,
       health: config.health,
       maxHealth: config.health,
-      speed: config.speed * speedMultiplier
+      speed: config.speed * speedMultiplier,
+      seed: Math.floor(Math.random() * 1000000) + 1,
     })
   }, [])
 
@@ -325,18 +328,17 @@ export default function StarFighterPage() {
       ctx.fillRect(bullet.x, bullet.y, 8, 12)
     })
 
-    // Draw particles
+    // Draw asteroids
     particlesRef.current.forEach(particle => {
-      // Particle color based on size
-      const colors = {
-        16: '#888',
-        32: '#999',
-        64: '#aaa',
-        128: '#ccc'
-      }
-      ctx.fillStyle = colors[particle.size]
-      ctx.fillRect(particle.x, particle.y, particle.size, particle.size)
-      
+      drawAsteroid(
+        ctx,
+        particle.x,
+        particle.y,
+        particle.size,
+        particle.seed,
+        particle.y * 0.012
+      )
+
       // Health bar
       if (particle.health < particle.maxHealth) {
         const healthBarWidth = particle.size

@@ -3,7 +3,6 @@
 import { usePrivy } from '@privy-io/react-auth'
 import { useEffect, useState } from 'react'
 import ProfileEditor from '@/components/ProfileEditor'
-import UserDirectory from '@/components/UserDirectory'
 
 interface UserProfile {
   username: string | null
@@ -233,17 +232,20 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="mt-10">
+        <div className="mt-10 flex flex-wrap gap-4">
           <button
             onClick={() => { window.location.href = '/leaderboards' }}
             className="btn-primary"
           >
             Leaderboards
           </button>
+          <button
+            onClick={() => { window.location.href = '/players' }}
+            className="btn-primary"
+          >
+            Player Directory
+          </button>
         </div>
-
-        {/* User Directory */}
-        <UserDirectory currentUserProfile={profile} />
       </div>
     </main>
   )

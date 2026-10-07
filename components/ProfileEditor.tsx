@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
 import Avatar from './Avatar'
+import { fileToProfilePicture } from '@/lib/image-to-bitmap'
 import { useBackgroundColor } from '@/lib/background-color'
 
 interface ProfileEditorProps {
@@ -28,6 +29,8 @@ export default function ProfileEditor({ profile, onProfileUpdate, onBackgroundCo
   const [available, setAvailable] = useState<boolean | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [pictureError, setPictureError] = useState<string | null>(null)
+  const [pictureBusy, setPictureBusy] = useState(false)
 
   const backgroundColors = [
     { value: 'white', label: 'White', class: 'from-gray-50 via-white to-blue-50' },
@@ -158,7 +161,21 @@ export default function ProfileEditor({ profile, onProfileUpdate, onBackgroundCo
     setAppBackground(savedColor)
     setIsEditing(false)
     setError(null)
+    setPictureError(null)
     setAvailable(null)
+  }
+
+  const handleAvatarFile = async (file: File | undefined) => {
+    if (!file) return
+    try {
+      setPictureBusy(true)
+      setPictureError(null)
+      setAvatarUrl(await fileToProfilePicture(file))
+    } catch (err) {
+      setPictureError(err instanceof Error ? err.message : 'Could not use that picture.')
+    } finally {
+      setPictureBusy(false)
+    }
   }
 
   if (!isEditing) {
@@ -221,27 +238,34 @@ export default function ProfileEditor({ profile, onProfileUpdate, onBackgroundCo
       <h3 className="text-lg font-bold text-gray-900 mb-4">Edit Profile</h3>
 
       <div className="space-y-4">
-        {/* Avatar URL or Bitmap */}
+        {/* Profile picture */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Profile Picture
           </label>
-          <textarea
-            value={avatarUrl}
-            onChange={(e) => setAvatarUrl(e.target.value)}
-            placeholder="Enter a URL (https://...) or paste a bitmap string (hex)"
-            className="input-field font-mono text-sm"
-            rows={3}
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/gif,image/webp"
+            onChange={(event) => handleAvatarFile(event.target.files?.[0])}
+            className="block w-full text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-primary-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary-700"
           />
-          <p className="mt-1 text-xs text-gray-500">
-            Enter a URL to an image OR paste a bitmap string from your inventory
-          </p>
-          {avatarUrl && profile?.username && (
+          <label className="block text-sm font-medium text-gray-700 mt-4 mb-2">
+            Or a link to a picture
+          </label>
+          <input
+            type="url"
+            value={avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://') ? avatarUrl : ''}
+            onChange={(event) => setAvatarUrl(event.target.value)}
+            placeholder="https://..."
+            className="input-field"
+          />
+          {pictureError && <p className="mt-2 text-sm text-red-600">{pictureError}</p>}
+          {avatarUrl && (
             <div className="mt-3">
               <p className="text-xs text-gray-600 mb-2">Preview:</p>
-              <Avatar 
+              <Avatar
                 avatarUrl={avatarUrl}
-                username={profile.username}
+                username={profile?.username || 'you'}
                 size="lg"
               />
             </div>
@@ -339,6 +363,7 @@ export default function ProfileEditor({ profile, onProfileUpdate, onBackgroundCo
             onClick={handleSave}
             disabled={
               saving ||
+              pictureBusy ||
               checking ||
               (username !== profile?.username && !available) ||
               (username === profile?.username && 
