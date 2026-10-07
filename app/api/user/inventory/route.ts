@@ -35,6 +35,28 @@ export async function GET(request: NextRequest) {
   }
 }
 
+async function ensurePaintingType() {
+  const existing = await sql`
+    SELECT con.conname AS name, pg_get_constraintdef(con.oid) AS def
+    FROM pg_constraint con
+    JOIN pg_class rel ON rel.oid = con.conrelid
+    WHERE rel.relname = 'user_inventory' AND con.contype = 'c'
+  `
+
+  if (existing.rows.some((row) => String(row.def).includes('painting'))) return
+
+  for (const row of existing.rows) {
+    const name = String(row.name).replace(/"/g, '""')
+    await sql.query(`ALTER TABLE user_inventory DROP CONSTRAINT "${name}"`)
+  }
+
+  await sql`
+    ALTER TABLE user_inventory
+    ADD CONSTRAINT user_inventory_type_check
+    CHECK (type IN ('character', 'vehicle', 'painting'))
+  `
+}
+
 // POST - Add new item to inventory
 export async function POST(request: NextRequest) {
   try {
@@ -48,11 +70,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (type !== 'character' && type !== 'vehicle') {
+    if (type !== 'character' && type !== 'vehicle' && type !== 'painting') {
       return NextResponse.json(
-        { error: 'Invalid type. Must be "character" or "vehicle"' },
+        { error: 'Invalid type. Must be "character", "vehicle", or "painting"' },
         { status: 400 }
       )
+    }
+
+    if (type === 'painting') {
+      await ensurePaintingType()
     }
 
     const result = await sql`

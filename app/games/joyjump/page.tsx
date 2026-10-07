@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
+import SpriteRenderer from '@/components/SpriteRenderer'
 import { useGamepad } from '@/hooks/useGamepad'
+import colorPalette from '../../../color-palette.json'
 import {
   createWorld,
   scoreFor,
@@ -17,7 +19,30 @@ import {
   type Player,
 } from '@/lib/joyjump-world'
 
-type GameState = 'start' | 'playing' | 'paused' | 'gameOver'
+type GameState = 'pick' | 'start' | 'playing' | 'paused' | 'gameOver'
+
+type InventoryItem = {
+  id: number
+  bitmap_string: string
+}
+
+function spriteFromBitmap(bitmap: string) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 64
+  canvas.height = 64
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return null
+  const bytes = bitmap.match(/.{1,2}/g) || []
+  for (let i = 0; i < bytes.length && i < 64 * 64; i++) {
+    const colorIndex = parseInt(bytes[i], 16)
+    if (isNaN(colorIndex) || colorIndex >= colorPalette.allColors.length) continue
+    const color = colorPalette.allColors[colorIndex]
+    if (color === 'transparent') continue
+    ctx.fillStyle = color
+    ctx.fillRect(i % 64, Math.floor(i / 64), 1, 1)
+  }
+  return canvas
+}
 
 function toScreen(worldY: number, camera: number) {
   return WORLD_HEIGHT - (worldY - camera)
@@ -88,8 +113,23 @@ function drawPlatform(ctx: CanvasRenderingContext2D, platform: Platform, camera:
   ctx.restore()
 }
 
-function drawPlayer(ctx: CanvasRenderingContext2D, player: Player, camera: number) {
+function drawPlayer(
+  ctx: CanvasRenderingContext2D,
+  player: Player,
+  camera: number,
+  sprite: HTMLCanvasElement | null
+) {
   const feet = toScreen(player.y, camera)
+  if (sprite) {
+    const size = 44
+    ctx.save()
+    ctx.translate(player.x, feet + 4)
+    if (player.facing < 0) ctx.scale(-1, 1)
+    ctx.imageSmoothingEnabled = false
+    ctx.drawImage(sprite, -size / 2, -size, size, size)
+    ctx.restore()
+    return
+  }
   const stretch = Math.max(-5, Math.min(8, player.vy / 140))
   const bodyW = 32 - stretch * 0.35
   const bodyH = 36 + stretch
@@ -133,7 +173,11 @@ function drawPlayer(ctx: CanvasRenderingContext2D, player: Player, camera: numbe
   drawAt(player.x)
 }
 
-function drawWorld(ctx: CanvasRenderingContext2D, world: JoyWorld) {
+function drawWorld(
+  ctx: CanvasRenderingContext2D,
+  world: JoyWorld,
+  sprite: HTMLCanvasElement | null
+) {
   const [top, bottom] = skyColors(world.camera)
   const sky = ctx.createLinearGradient(0, 0, 0, WORLD_HEIGHT)
   sky.addColorStop(0, top)
@@ -157,7 +201,7 @@ function drawWorld(ctx: CanvasRenderingContext2D, world: JoyWorld) {
 
   for (const cloud of world.clouds) drawCloud(ctx, cloud, world.camera)
   for (const platform of world.platforms) drawPlatform(ctx, platform, world.camera)
-  drawPlayer(ctx, world.player, world.camera)
+  drawPlayer(ctx, world.player, world.camera, sprite)
 
   const glow = ctx.createLinearGradient(0, WORLD_HEIGHT - 36, 0, WORLD_HEIGHT)
   glow.addColorStop(0, 'rgba(255, 70, 90, 0)')
@@ -195,9 +239,12 @@ export default function JoyJumpPage() {
   const highScoreRef = useRef(0)
   const endedRef = useRef(false)
   const audioRef = useRef<AudioContext | null>(null)
-  const [gameState, setGameState] = useState<GameState>('start')
+  const spriteRef = useRef<HTMLCanvasElement | null>(null)
+  const [gameState, setGameState] = useState<GameState>('pick')
   const [score, setScore] = useState(0)
   const [highScore, setHighScore] = useState(0)
+  const [items, setItems] = useState<InventoryItem[]>([])
+  const [loadingItems, setLoadingItems] = useState(true)
 
   gamepadRef.current = gamepad
   userIdRef.current = user?.id ?? null
@@ -216,11 +263,32 @@ export default function JoyJumpPage() {
   }, [ready, authenticated, router])
 
   useEffect(() => {
+    if (!user?.id) return
+    let cancelled = false
+    const load = async () => {
+      try {
+        const response = await fetch(`/api/user/inventory?userId=${user.id}`)
+        if (!response.ok) return
+        const data = await response.json()
+        if (!cancelled) setItems(data.items || [])
+      } catch (error) {
+        console.error('Error fetching inventory:', error)
+      } finally {
+        if (!cancelled) setLoadingItems(false)
+      }
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [user?.id])
+
+  useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    drawWorld(ctx, worldRef.current)
+    drawWorld(ctx, worldRef.current, spriteRef.current)
   }, [gameState])
 
   useEffect(() => {
@@ -311,7 +379,7 @@ export default function JoyJumpPage() {
 
       const nextScore = scoreFor(worldRef.current)
       setScore(nextScore)
-      drawWorld(ctx, worldRef.current)
+      drawWorld(ctx, worldRef.current, spriteRef.current)
       if (result === 'dead') {
         finish(nextScore)
         return
@@ -329,6 +397,11 @@ export default function JoyJumpPage() {
       if (AudioCtx) audioRef.current = new AudioCtx()
     }
     audioRef.current?.resume().catch(() => {})
+  }
+
+  const chooseCharacter = (bitmap: string | null) => {
+    spriteRef.current = bitmap ? spriteFromBitmap(bitmap) : null
+    setGameState('start')
   }
 
   const startGame = () => {
@@ -384,6 +457,54 @@ export default function JoyJumpPage() {
             style={{ maxWidth: WORLD_WIDTH, touchAction: 'none' }}
           />
 
+          {gameState === 'pick' && (
+            <div className="absolute inset-0 bg-black/75 rounded-lg overflow-auto p-4">
+              <div className="text-center text-white max-w-lg mx-auto">
+                <h2 className="text-3xl font-bold mb-2 text-amber-300">Pick your character</h2>
+                <p className="mb-4 text-sm text-gray-300">
+                  Choose a picture from your inventory, or use the default.
+                </p>
+                {loadingItems ? (
+                  <p>Loading your pictures...</p>
+                ) : (
+                  <div className="grid grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => chooseCharacter(null)}
+                      className="bg-gray-700 hover:bg-gray-600 p-3 rounded-lg border-2 border-gray-500 hover:border-amber-300"
+                    >
+                      <div className="mx-auto mb-2 h-16 w-16 rounded-full bg-yellow-300" />
+                      <p className="text-sm">Default</p>
+                    </button>
+                    {items.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => chooseCharacter(item.bitmap_string)}
+                        className="bg-gray-700 hover:bg-gray-600 p-3 rounded-lg border-2 border-gray-500 hover:border-amber-300"
+                      >
+                        <div
+                          className="mb-2 flex h-16 items-center justify-center rounded"
+                          style={{
+                            background:
+                              'repeating-conic-gradient(#333 0% 25%, #444 0% 50%) 50% / 8px 8px',
+                          }}
+                        >
+                          <SpriteRenderer
+                            bitmapString={item.bitmap_string}
+                            width={64}
+                            height={64}
+                            pixelSize={1}
+                          />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {gameState === 'start' && (
             <div className="absolute inset-0 bg-black/75 rounded-lg flex items-center justify-center p-4">
               <div className="text-center text-white max-w-sm">
@@ -423,6 +544,12 @@ export default function JoyJumpPage() {
                 )}
                 <button onClick={startGame} className="btn-primary mt-2">
                   Jump again
+                </button>
+                <button
+                  onClick={() => setGameState('pick')}
+                  className="btn-secondary mt-3 block mx-auto"
+                >
+                  Pick a different character
                 </button>
               </div>
             </div>

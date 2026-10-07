@@ -182,9 +182,7 @@ export default function StarFighterPage() {
       const response = await fetch(`/api/user/inventory?userId=${user?.id}`)
       if (response.ok) {
         const data = await response.json()
-        // Filter for vehicles only
-        const vehicleItems = data.items.filter((item: InventoryItem) => item.type === 'vehicle')
-        setVehicles(vehicleItems)
+        setVehicles(data.items || [])
       }
     } catch (error) {
       console.error('Error fetching vehicles:', error)
@@ -696,15 +694,15 @@ export default function StarFighterPage() {
             {gameState === 'vehicleSelect' && (
               <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-90 rounded-lg overflow-auto">
                 <div className="text-center text-white p-8 max-w-4xl">
-                  <h2 className="text-4xl font-bold mb-6">🚀 Choose Your Vehicle</h2>
+                  <h2 className="text-4xl font-bold mb-6">🚀 Choose Your Ship</h2>
                   
                   {/* Controller indicator */}
                   
                   {loadingInventory ? (
-                    <p className="text-xl">Loading vehicles...</p>
+                    <p className="text-xl">Loading your pictures...</p>
                   ) : vehicles.length === 0 ? (
                     <div>
-                      <p className="text-xl mb-6">No vehicles in inventory. Using default ship!</p>
+                      <p className="text-xl mb-6">Nothing in your inventory yet. You can use the default ship!</p>
                       <button
                         onClick={() => handleVehicleSelect(null)}
                         className="btn-primary text-lg px-8 py-3"
@@ -756,7 +754,6 @@ export default function StarFighterPage() {
                                 pixelSize={2}
                               />
                             </div>
-                            <p className="text-sm">Custom Vehicle</p>
                           </button>
                         ))}
                       </div>

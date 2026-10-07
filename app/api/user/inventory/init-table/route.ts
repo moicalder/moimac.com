@@ -9,7 +9,7 @@ export async function GET() {
         id SERIAL PRIMARY KEY,
         user_id VARCHAR(255) NOT NULL,
         bitmap_string TEXT NOT NULL,
-        type VARCHAR(50) NOT NULL CHECK (type IN ('character', 'vehicle')),
+        type VARCHAR(50) NOT NULL CHECK (type IN ('character', 'vehicle', 'painting')),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       );

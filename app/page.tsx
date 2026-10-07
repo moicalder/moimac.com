@@ -106,6 +106,13 @@ export default function Home() {
         icon: '😊',
         status: 'available',
       },
+      {
+        id: 'paint',
+        name: 'Paint',
+        description: 'Draw pixel art and save it to your inventory',
+        icon: '🎨',
+        status: 'available',
+      },
     ]
 
   if (!ready) {

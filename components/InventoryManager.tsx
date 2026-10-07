@@ -7,7 +7,7 @@ import SpriteRenderer from './SpriteRenderer'
 interface InventoryItem {
   id: number
   bitmap_string: string
-  type: 'character' | 'vehicle'
+  type: 'character' | 'vehicle' | 'painting'
   created_at: string
 }
 
@@ -20,7 +20,6 @@ export default function InventoryManager({ onProfileUpdate }: InventoryManagerPr
   const [items, setItems] = useState<InventoryItem[]>([])
   const [loading, setLoading] = useState(false)
   const [bitmapInput, setBitmapInput] = useState('')
-  const [selectedType, setSelectedType] = useState<'character' | 'vehicle'>('character')
   const [showAddForm, setShowAddForm] = useState(false)
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | null>(null)
@@ -90,7 +89,7 @@ export default function InventoryManager({ onProfileUpdate }: InventoryManagerPr
         body: JSON.stringify({
           userId: user.id,
           bitmapString: bitmapInput.trim(),
-          type: selectedType
+          type: 'character'
         })
       })
 
@@ -187,7 +186,7 @@ export default function InventoryManager({ onProfileUpdate }: InventoryManagerPr
     <div className="card">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-gray-900">
-          Character & Vehicle Inventory
+          Your Inventory
         </h2>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
@@ -204,22 +203,6 @@ export default function InventoryManager({ onProfileUpdate }: InventoryManagerPr
           <h3 className="font-semibold text-gray-900 mb-3">Add New Item</h3>
           
           <div className="space-y-4">
-            {/* Type Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Type
-              </label>
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value as 'character' | 'vehicle')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 
-                         focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="character">Character</option>
-                <option value="vehicle">Vehicle</option>
-              </select>
-            </div>
-
             {/* Bitmap Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -286,7 +269,7 @@ export default function InventoryManager({ onProfileUpdate }: InventoryManagerPr
       ) : items.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <p className="mb-2">No items in your inventory yet.</p>
-          <p className="text-sm">Click "Add New" to add your first character or vehicle!</p>
+          <p className="text-sm">Play Paint, or click "Add New" to add something yourself.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -315,17 +298,6 @@ export default function InventoryManager({ onProfileUpdate }: InventoryManagerPr
                     pixelSize={2}
                     className="block"
                   />
-                </div>
-
-                {/* Type Badge */}
-                <div className="text-center mb-3 w-full">
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                    item.type === 'character' 
-                      ? 'bg-blue-100 text-blue-700' 
-                      : 'bg-green-100 text-green-700'
-                  }`}>
-                    {item.type === 'character' ? '🧑 Character' : '🚗 Vehicle'}
-                  </span>
                 </div>
 
                 {/* Action Buttons */}
@@ -373,9 +345,7 @@ export default function InventoryManager({ onProfileUpdate }: InventoryManagerPr
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">
-                {selectedItem.type === 'character' ? '🧑 Character' : '🚗 Vehicle'}
-              </h3>
+              <h3 className="text-lg font-bold text-gray-900">Your picture</h3>
               <button
                 onClick={() => setSelectedItem(null)}
                 className="text-gray-500 hover:text-gray-700"
