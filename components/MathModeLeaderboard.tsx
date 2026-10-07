@@ -32,15 +32,17 @@ interface Session {
 
 interface MathModeLeaderboardProps {
   operator?: Operator
+  defaultOpen?: boolean
 }
 
-export default function MathModeLeaderboard({ operator = 'global' }: MathModeLeaderboardProps) {
+export default function MathModeLeaderboard({ operator = 'global', defaultOpen = false }: MathModeLeaderboardProps) {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedOperator, setSelectedOperator] = useState<Operator>(operator)
   const [expandedUser, setExpandedUser] = useState<string | null>(null)
   const [userSessions, setUserSessions] = useState<Session[]>([])
   const [loadingSessions, setLoadingSessions] = useState(false)
+  const [open, setOpen] = useState(defaultOpen)
 
   useEffect(() => {
     fetchLeaderboard(selectedOperator)
@@ -131,21 +133,33 @@ export default function MathModeLeaderboard({ operator = 'global' }: MathModeLea
     { value: '÷', label: 'Division', icon: '➗' },
   ]
 
-  if (loading) {
-    return (
-      <div className="card">
+  return (
+    <div className="card">
+      <div
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            setOpen((value) => !value)
+          }
+        }}
+        className={`flex items-center justify-between gap-4 cursor-pointer select-none -mx-8 px-8 -mt-8 pt-8 ${open ? 'mb-4' : '-mb-8 pb-8'}`}
+      >
+        <h2 className="text-2xl font-bold text-gray-900">🏆 MathMode Leaderboard</h2>
+        <span className="text-gray-500 text-lg" aria-hidden="true">
+          {open ? '▼' : '▶'}
+        </span>
+      </div>
+
+      {open && (loading ? (
         <div className="text-center py-8 text-gray-500">
           Loading leaderboard...
         </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="card">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">
-        🏆 MathMode Leaderboard
-      </h2>
+      ) : (
+      <>
 
       {/* Operator Tabs */}
       <div className="flex flex-wrap gap-2 mb-6">
@@ -344,6 +358,8 @@ export default function MathModeLeaderboard({ operator = 'global' }: MathModeLea
           <p><strong>Sessions:</strong> Number of practice sessions completed</p>
         </div>
       </div>
+      </>
+      ))}
     </div>
   )
 }

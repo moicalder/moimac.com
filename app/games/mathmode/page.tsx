@@ -299,7 +299,7 @@ export default function MathModePage() {
   const percentage = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0
 
   return (
-    <main className="min-h-screen p-4 md:p-8 bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <main className="min-h-screen p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -538,7 +538,7 @@ export default function MathModePage() {
 
         {gameState === 'leaderboard' && (
           <div>
-            <MathModeLeaderboard operator={selectedOperator} />
+            <MathModeLeaderboard operator={selectedOperator} defaultOpen />
             <div className="flex gap-4 mt-6">
               <button
                 onClick={() => router.push('/')}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
 import Avatar from './Avatar'
+import { useBackgroundColor } from '@/lib/background-color'
 
 interface ProfileEditorProps {
   profile: {
@@ -17,6 +18,7 @@ interface ProfileEditorProps {
 
 export default function ProfileEditor({ profile, onProfileUpdate, onBackgroundColorChange }: ProfileEditorProps) {
   const { user } = usePrivy()
+  const { setBackgroundColor: setAppBackground } = useBackgroundColor()
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [username, setUsername] = useState('')
@@ -149,8 +151,11 @@ export default function ProfileEditor({ profile, onProfileUpdate, onBackgroundCo
   }
 
   const handleCancel = () => {
+    const savedColor = profile?.background_color || 'white'
     setUsername(profile?.username || '')
     setAvatarUrl(profile?.avatar_url || '')
+    setBackgroundColor(savedColor)
+    setAppBackground(savedColor)
     setIsEditing(false)
     setError(null)
     setAvailable(null)
@@ -255,6 +260,7 @@ export default function ProfileEditor({ profile, onProfileUpdate, onBackgroundCo
                 type="button"
                 onClick={() => {
                   setBackgroundColor(color.value)
+                  setAppBackground(color.value)
                   onBackgroundColorChange?.(color.value)
                 }}
                 className={`relative h-16 rounded-lg border-2 transition-all ${

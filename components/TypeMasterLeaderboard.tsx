@@ -44,9 +44,10 @@ const LESSONS = [
   { id: 'all-keys' as LessonId, name: 'All Keys', icon: '⌨️' },
 ]
 
-export default function TypeMasterLeaderboard() {
+export default function TypeMasterLeaderboard({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(defaultOpen)
   const [selectedLesson, setSelectedLesson] = useState<LessonId>('global')
   const [expandedUser, setExpandedUser] = useState<string | null>(null)
   const [userSessions, setUserSessions] = useState<Session[]>([])
@@ -131,21 +132,33 @@ export default function TypeMasterLeaderboard() {
     return LESSONS.find(l => l.id === lessonId)?.name || lessonId
   }
 
-  if (loading) {
-    return (
-      <div className="card">
+  return (
+    <div className="card">
+      <div
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            setOpen((value) => !value)
+          }
+        }}
+        className={`flex items-center justify-between gap-4 cursor-pointer select-none -mx-8 px-8 -mt-8 pt-8 ${open ? 'mb-4' : '-mb-8 pb-8'}`}
+      >
+        <h2 className="text-2xl font-bold text-gray-900">⌨️ TypeMaster Leaderboard</h2>
+        <span className="text-gray-500 text-lg" aria-hidden="true">
+          {open ? '▼' : '▶'}
+        </span>
+      </div>
+
+      {open && (loading ? (
         <div className="text-center py-8 text-gray-500">
           Loading leaderboard...
         </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="card">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">
-        ⌨️ TypeMaster Leaderboard
-      </h2>
+      ) : (
+      <>
 
       {/* Lesson Selector */}
       <div className="flex flex-wrap gap-2 mb-6">
@@ -347,6 +360,8 @@ export default function TypeMasterLeaderboard() {
           <p><strong>Mastery Score:</strong> WPM × Accuracy (combined skill metric)</p>
         </div>
       </div>
+      </>
+      ))}
     </div>
   )
 }

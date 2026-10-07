@@ -1,6 +1,7 @@
 'use client'
 
 import { PrivyProvider } from '@privy-io/react-auth'
+import { BackgroundColorProvider } from '@/lib/background-color'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -18,7 +19,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         },
       }}
     >
-      {children}
+      <BackgroundColorProvider>
+        {children}
+      </BackgroundColorProvider>
     </PrivyProvider>
   )
 }

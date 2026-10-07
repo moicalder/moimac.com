@@ -454,7 +454,7 @@ export default function SnakePage() {
   }
 
   return (
-    <main className="min-h-screen p-4 md:p-8 bg-gradient-to-br from-purple-50 via-white to-blue-50">
+    <main className="min-h-screen p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

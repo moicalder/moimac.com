@@ -4,11 +4,6 @@ import { usePrivy } from '@privy-io/react-auth'
 import { useEffect, useState } from 'react'
 import ProfileEditor from '@/components/ProfileEditor'
 import UserDirectory from '@/components/UserDirectory'
-import MathModeLeaderboard from '@/components/MathModeLeaderboard'
-import SnakeLeaderboard from '@/components/SnakeLeaderboard'
-import TypeMasterLeaderboard from '@/components/TypeMasterLeaderboard'
-import StarFighterLeaderboard from '@/components/StarFighterLeaderboard'
-import { getBackgroundClass } from '@/lib/background-colors'
 
 interface UserProfile {
   username: string | null
@@ -22,7 +17,6 @@ export default function Home() {
   const { ready, authenticated, user, login, logout } = usePrivy()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(false)
-  const [previewBackgroundColor, setPreviewBackgroundColor] = useState<string | null>(null)
 
   // Fetch or create user profile when authenticated
   useEffect(() => {
@@ -105,6 +99,13 @@ export default function Home() {
         icon: '🚀',
         status: 'available',
       },
+      {
+        id: 'joyjump',
+        name: 'Joy Jump',
+        description: 'Jump higher and higher. Fall to the bottom and you lose!',
+        icon: '😊',
+        status: 'available',
+      },
     ]
 
   if (!ready) {
@@ -153,7 +154,7 @@ export default function Home() {
   }
 
   return (
-    <main className={`min-h-screen p-4 md:p-8 bg-gradient-to-br ${getBackgroundClass(previewBackgroundColor || profile?.background_color)}`}>
+    <main className="min-h-screen p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header with Sign Out */}
         <div className="flex items-center justify-between mb-6">
@@ -169,11 +170,7 @@ export default function Home() {
         <div className="mb-6">
           <ProfileEditor 
             profile={profile} 
-            onProfileUpdate={() => {
-              setPreviewBackgroundColor(null) // Reset preview after save
-              initializeUser()
-            }}
-            onBackgroundColorChange={setPreviewBackgroundColor}
+            onProfileUpdate={initializeUser}
           />
         </div>
 
@@ -229,24 +226,13 @@ export default function Home() {
           ))}
         </div>
 
-        {/* MathMode Leaderboard */}
-        <div className="mt-12">
-          <MathModeLeaderboard />
-        </div>
-
-        {/* Snake Leaderboard */}
-        <div className="mt-12">
-          <SnakeLeaderboard />
-        </div>
-
-        {/* TypeMaster Leaderboard */}
-        <div className="mt-12">
-          <TypeMasterLeaderboard />
-        </div>
-
-        {/* Star Fighter Leaderboard */}
-        <div id="starfighter-leaderboard" className="mt-12">
-          <StarFighterLeaderboard />
+        <div className="mt-10">
+          <button
+            onClick={() => { window.location.href = '/leaderboards' }}
+            className="btn-primary"
+          >
+            Leaderboards
+          </button>
         </div>
 
         {/* User Directory */}

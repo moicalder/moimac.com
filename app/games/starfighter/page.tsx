@@ -5,8 +5,6 @@ import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
 import SpriteRenderer from '@/components/SpriteRenderer'
 import { useGamepad } from '@/hooks/useGamepad'
-import { getBackgroundClass } from '@/lib/background-colors'
-
 type GameState = 'vehicleSelect' | 'start' | 'playing' | 'paused' | 'gameOver'
 
 interface InventoryItem {
@@ -50,8 +48,6 @@ export default function StarFighterPage() {
   const [username, setUsername] = useState<string | null>(null)
   const [spriteReady, setSpriteReady] = useState(false)
   const [vehicleMenuIndex, setVehicleMenuIndex] = useState(0) // For gamepad navigation
-  const [backgroundColor, setBackgroundColor] = useState<string>('white')
-  
   // Game state refs
   const playerRef = useRef({ x: 320, y: 520, width: 64, height: 64 })
   const bulletsRef = useRef<Bullet[]>([])
@@ -180,7 +176,6 @@ export default function StarFighterPage() {
       if (profileResponse.ok) {
         const profileData = await profileResponse.json()
         setUsername(profileData.profile?.username)
-        setBackgroundColor(profileData.profile?.background_color || 'white')
       }
       
       // Fetch inventory
@@ -645,7 +640,7 @@ export default function StarFighterPage() {
   }
 
   return (
-    <main className={`main-container bg-gradient-to-br ${getBackgroundClass(backgroundColor)}`}>
+    <main className="main-container">
       <div className="card">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-gray-900">🚀 Star Fighter</h1>
@@ -837,15 +832,7 @@ export default function StarFighterPage() {
                       Play Again
                     </button>
                     <button
-                      onClick={() => {
-                        const leaderboardSection = document.getElementById('starfighter-leaderboard')
-                        if (leaderboardSection) {
-                          window.scrollTo({ top: leaderboardSection.offsetTop - 100, behavior: 'smooth' })
-                          router.push('/#starfighter-leaderboard')
-                        } else {
-                          router.push('/')
-                        }
-                      }}
+                      onClick={() => router.push('/leaderboards/starfighter')}
                       className="btn-secondary text-lg px-8 py-3"
                     >
                       View Leaderboard
